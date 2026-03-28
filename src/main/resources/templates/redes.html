@@ -1,0 +1,157 @@
+{#include layout}
+{#title}Redes - Crypto Manager{/title}
+
+{#content}
+<div class="glass-card p-8" x-data="redesPage()">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">Redes</h2>
+        <button @click="abrirModal()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium">
+            + Nova Rede
+        </button>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full table-glass">
+            <thead>
+                <tr>
+                    <th class="px-4 py-3 text-left">ID</th>
+                    <th class="px-4 py-3 text-left">Nome</th>
+                    <th class="px-4 py-3 text-left">Explorer</th>
+                    <th class="px-4 py-3 text-left">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="rede in redes" :key="rede.id">
+                    <tr>
+                        <td class="px-4 py-3" x-text="rede.id"></td>
+                        <td class="px-4 py-3" x-text="rede.nome"></td>
+                        <td class="px-4 py-3">
+                            <a :href="rede.urlExplorer" target="_blank" class="text-blue-300 hover:text-blue-100" x-text="rede.urlExplorer"></a>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex space-x-2">
+                                <button @click="editar(rede)" class="text-blue-300 hover:text-blue-100">Editar</button>
+                                <button @click="excluir(rede.id)" class="text-red-300 hover:text-red-100">Excluir</button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Modal -->
+    <div x-show="modalAberto" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style="display: none;">
+        <div class="glass-card p-8 max-w-md w-full">
+            <h3 class="text-xl font-bold text-white mb-4" x-text="editando ? 'Editar Rede' : 'Nova Rede'"></h3>
+            
+            <form @submit.prevent="salvar">
+                <div class="mb-4">
+                    <label class="block text-white mb-2">Nome</label>
+                    <input type="text" x-model="form.nome" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-white mb-2">URL Explorer</label>
+                    <input type="url" x-model="form.urlExplorer" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" @click="fecharModal()" class="px-6 py-2 rounded-lg text-white bg-white/20 hover:bg-white/30 transition">Cancelar</button>
+                    <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-medium">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function redesPage() {
+    return {
+        redes: [],
+        modalAberto: false,
+        editando: false,
+        form: {
+            id: null,
+            nome: '',
+            urlExplorer: ''
+        },
+        
+        async init() {
+            await this.carregar();
+        },
+        
+        async carregar() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/redes', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.redes = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar redes', e);
+            }
+        },
+        
+        abrirModal() {
+            this.editando = false;
+            this.form = { id: null, nome: '', urlExplorer: '' };
+            this.modalAberto = true;
+        },
+        
+        fecharModal() {
+            this.modalAberto = false;
+        },
+        
+        editar(rede) {
+            this.editando = true;
+            this.form = { ...rede };
+            this.modalAberto = true;
+        },
+        
+        async salvar() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const url = this.editando ? `/api/redes/${this.form.id}` : '/api/redes';
+                const method = this.editando ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.form)
+                });
+                
+                await this.carregar();
+                this.fecharModal();
+            } catch (e) {
+                console.error('Erro ao salvar rede', e);
+            }
+        },
+        
+        async excluir(id) {
+            if (!confirm('Tem certeza que deseja excluir esta rede?')) return;
+            
+            try {
+                const token = localStorage.getItem('jwt_token');
+                await fetch(`/api/redes/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                await this.carregar();
+            } catch (e) {
+                console.error('Erro ao excluir rede', e);
+            }
+        }
+    }
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('redesPage', () => redesPage());
+});
+</script>
+{/content}
+{/include}

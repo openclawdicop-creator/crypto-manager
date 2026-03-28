@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Crypto Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .glass-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <header class="glass-card p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-white">🚀 Crypto Manager</h1>
+                <nav class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-white hover:text-gray-200">Dashboard</a>
+                    <a href="/exchanges" class="text-white hover:text-gray-200">Exchanges</a>
+                    <a href="/redes" class="text-white hover:text-gray-200">Redes</a>
+                    <a href="/ativos" class="text-white hover:text-gray-200">Ativos</a>
+                    <a href="/parametrizacoes" class="text-white hover:text-gray-200">Parametrizações</a>
+                    <a href="/historicos" class="text-white hover:text-gray-200">Históricos</a>
+                    <button onclick="logout()" class="btn-primary px-4 py-2 rounded-lg text-white">Logout</button>
+                </nav>
+            </div>
+        </header>
+        
+        <main>
+            <div class="glass-card p-8" x-data="dashboard()" x-init="init()">
+                <h2 class="text-2xl font-bold text-white mb-6">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-card p-6"><div class="text-white/80 text-sm mb-2">Total de Exchanges</div><div class="text-4xl font-bold text-white" x-text="stats.exchanges">0</div></div>
+                    <div class="glass-card p-6"><div class="text-white/80 text-sm mb-2">Total de Redes</div><div class="text-4xl font-bold text-white" x-text="stats.redes">0</div></div>
+                    <div class="glass-card p-6"><div class="text-white/80 text-sm mb-2">Total de Ativos</div><div class="text-4xl font-bold text-white" x-text="stats.ativos">0</div></div>
+                    <div class="glass-card p-6"><div class="text-white/80 text-sm mb-2">Parametrizações Ativas</div><div class="text-4xl font-bold text-white" x-text="stats.parametrizacoes">0</div></div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">Acesso Rápido</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <a href="/exchanges" class="btn-primary px-6 py-4 rounded-lg text-white font-medium text-center block">Gerenciar Exchanges</a>
+                        <a href="/redes" class="btn-primary px-6 py-4 rounded-lg text-white font-medium text-center block">Gerenciar Redes</a>
+                        <a href="/ativos" class="btn-primary px-6 py-4 rounded-lg text-white font-medium text-center block">Gerenciar Ativos</a>
+                        <a href="/parametrizacoes" class="btn-primary px-6 py-4 rounded-lg text-white font-medium text-center block">Gerenciar Parametrizações</a>
+                        <a href="/historicos" class="btn-primary px-6 py-4 rounded-lg text-white font-medium text-center block">Ver Históricos</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="glass-card p-6 mt-8 text-center text-white">
+            <p>&copy; 2024 Crypto Manager. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+    
+    <script>
+        function logout() { localStorage.removeItem('jwt_token'); window.location.href = '/login'; }
+        function dashboard() {
+            return {
+                stats: { exchanges: 0, redes: 0, ativos: 0, parametrizacoes: 0 },
+                async init() {
+                    const token = localStorage.getItem('jwt_token');
+                    const headers = { 'Authorization': 'Bearer ' + token };
+                    try {
+                        const r = await Promise.all([
+                            fetch('/api/exchanges', { headers }).then(x => x.json()),
+                            fetch('/api/redes', { headers }).then(x => x.json()),
+                            fetch('/api/ativos', { headers }).then(x => x.json()),
+                            fetch('/api/parametrizacoes', { headers }).then(x => x.json())
+                        ]);
+                        this.stats.exchanges = r[0].data ? r[0].data.length : 0;
+                        this.stats.redes = r[1].data ? r[1].data.length : 0;
+                        this.stats.ativos = r[2].data ? r[2].data.length : 0;
+                        this.stats.parametrizacoes = r[3].data ? r[3].data.filter(x => x.ativa).length : 0;
+                    } catch(e) { console.error(e); }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

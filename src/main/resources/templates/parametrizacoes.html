@@ -1,0 +1,291 @@
+{#include layout}
+{#title}Parametrizações - Crypto Manager{/title}
+
+{#content}
+<div class="glass-card p-8" x-data="parametrizacoesPage()">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">Parametrizações de Consulta de Preço</h2>
+        <button @click="abrirModal()" class="btn-primary px-6 py-3 rounded-lg text-white font-medium">
+            + Nova Parametrização
+        </button>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full table-glass">
+            <thead>
+                <tr>
+                    <th class="px-4 py-3 text-left">ID</th>
+                    <th class="px-4 py-3 text-left">Exchange</th>
+                    <th class="px-4 py-3 text-left">Rede</th>
+                    <th class="px-4 py-3 text-left">Compra</th>
+                    <th class="px-4 py-3 text-left">Venda</th>
+                    <th class="px-4 py-3 text-left">Qtd</th>
+                    <th class="px-4 py-3 text-left">Ativa</th>
+                    <th class="px-4 py-3 text-left">Log</th>
+                    <th class="px-4 py-3 text-left">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="param in parametrizacoes" :key="param.id">
+                    <tr>
+                        <td class="px-4 py-3" x-text="param.id"></td>
+                        <td class="px-4 py-3" x-text="param.exchange?.nome"></td>
+                        <td class="px-4 py-3" x-text="param.rede?.nome"></td>
+                        <td class="px-4 py-3">
+                            <span class="text-green-300" x-text="param.tokenCompra?.simbolo"></span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-red-300" x-text="param.tokenVenda?.simbolo"></span>
+                        </td>
+                        <td class="px-4 py-3" x-text="param.quantidadeCompra"></td>
+                        <td class="px-4 py-3">
+                            <span x-text="param.ativa ? '✅' : '❌'"></span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span x-text="param.logHabilitado ? '✅' : '❌'"></span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex space-x-2">
+                                <button @click="editar(param)" class="text-blue-300 hover:text-blue-100">Editar</button>
+                                <button @click="excluir(param.id)" class="text-red-300 hover:text-red-100">Excluir</button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Modal -->
+    <div x-show="modalAberto" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style="display: none;">
+        <div class="glass-card p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-white mb-4" x-text="editando ? 'Editar Parametrização' : 'Nova Parametrização'"></h3>
+            
+            <form @submit.prevent="salvar">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white mb-2">Exchange</label>
+                        <select x-model="form.exchangeId" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                            <option value="">Selecione...</option>
+                            <template x-for="ex in exchanges" :key="ex.id">
+                                <option :value="ex.id" x-text="ex.nome"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white mb-2">Rede</label>
+                        <select x-model="form.redeId" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                            <option value="">Selecione...</option>
+                            <template x-for="rede in redes" :key="rede.id">
+                                <option :value="rede.id" x-text="rede.nome"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white mb-2">Token Compra</label>
+                        <select x-model="form.tokenCompraId" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                            <option value="">Selecione...</option>
+                            <template x-for="ativo in ativos" :key="ativo.id">
+                                <option :value="ativo.id" x-text="ativo.simbolo + ' - ' + ativo.nome"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white mb-2">Token Venda</label>
+                        <select x-model="form.tokenVendaId" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                            <option value="">Selecione...</option>
+                            <template x-for="ativo in ativos" :key="ativo.id">
+                                <option :value="ativo.id" x-text="ativo.simbolo + ' - ' + ativo.nome"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white mb-2">Quantidade Compra</label>
+                        <input type="number" step="0.0001" x-model="form.quantidadeCompra" class="glass-input w-full px-4 py-2 rounded-lg" required>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" x-model="form.ativa" class="mr-2">
+                        <label class="text-white">Ativa</label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" x-model="form.logHabilitado" class="mr-2">
+                        <label class="text-white">Habilitar Log</label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" @click="fecharModal()" class="px-6 py-2 rounded-lg text-white bg-white/20 hover:bg-white/30 transition">Cancelar</button>
+                    <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-medium">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function parametrizacoesPage() {
+    return {
+        parametrizacoes: [],
+        exchanges: [],
+        redes: [],
+        ativos: [],
+        modalAberto: false,
+        editando: false,
+        form: {
+            id: null,
+            exchangeId: '',
+            redeId: '',
+            tokenCompraId: '',
+            tokenVendaId: '',
+            quantidadeCompra: 1,
+            ativa: true,
+            logHabilitado: true
+        },
+        
+        async init() {
+            await Promise.all([
+                this.carregarParametrizacoes(),
+                this.carregarExchanges(),
+                this.carregarRedes(),
+                this.carregarAtivos()
+            ]);
+        },
+        
+        async carregarParametrizacoes() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/parametrizacoes', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.parametrizacoes = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar parametrizações', e);
+            }
+        },
+        
+        async carregarExchanges() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/exchanges', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.exchanges = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar exchanges', e);
+            }
+        },
+        
+        async carregarRedes() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/redes', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.redes = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar redes', e);
+            }
+        },
+        
+        async carregarAtivos() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/ativos', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.ativos = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar ativos', e);
+            }
+        },
+        
+        abrirModal() {
+            this.editando = false;
+            this.form = { id: null, exchangeId: '', redeId: '', tokenCompraId: '', tokenVendaId: '', quantidadeCompra: 1, ativa: true, logHabilitado: true };
+            this.modalAberto = true;
+        },
+        
+        fecharModal() {
+            this.modalAberto = false;
+        },
+        
+        editar(param) {
+            this.editando = true;
+            this.form = {
+                id: param.id,
+                exchangeId: param.exchange?.id,
+                redeId: param.rede?.id,
+                tokenCompraId: param.tokenCompra?.id,
+                tokenVendaId: param.tokenVenda?.id,
+                quantidadeCompra: param.quantidadeCompra,
+                ativa: param.ativa,
+                logHabilitado: param.logHabilitado
+            };
+            this.modalAberto = true;
+        },
+        
+        async salvar() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const url = this.editando ? `/api/parametrizacoes/${this.form.id}` : '/api/parametrizacoes';
+                const method = this.editando ? 'PUT' : 'POST';
+                
+                const body = {
+                    exchange: { id: this.form.exchangeId },
+                    rede: { id: this.form.redeId },
+                    tokenCompra: { id: this.form.tokenCompraId },
+                    tokenVenda: { id: this.form.tokenVendaId },
+                    quantidadeCompra: parseFloat(this.form.quantidadeCompra),
+                    ativa: this.form.ativa,
+                    logHabilitado: this.form.logHabilitado
+                };
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                await this.carregarParametrizacoes();
+                this.fecharModal();
+            } catch (e) {
+                console.error('Erro ao salvar parametrização', e);
+            }
+        },
+        
+        async excluir(id) {
+            if (!confirm('Tem certeza que deseja excluir esta parametrização?')) return;
+            
+            try {
+                const token = localStorage.getItem('jwt_token');
+                await fetch(`/api/parametrizacoes/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                await this.carregarParametrizacoes();
+            } catch (e) {
+                console.error('Erro ao excluir parametrização', e);
+            }
+        }
+    }
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('parametrizacoesPage', () => parametrizacoesPage());
+});
+</script>
+{/content}
+{/include}

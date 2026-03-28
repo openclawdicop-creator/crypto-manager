@@ -1,0 +1,115 @@
+{#include layout}
+{#title}Histórico de Cotações - Crypto Manager{/title}
+
+{#content}
+<div class="glass-card p-8" x-data="historicosPage()">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">Histórico de Cotações</h2>
+    </div>
+    
+    <div class="mb-6">
+        <div class="flex items-center space-x-4">
+            <div>
+                <label class="block text-white mb-2">Filtrar por Parametrização</label>
+                <select x-model="filtroParametrizacao" @change="carregar()" class="glass-input px-4 py-2 rounded-lg">
+                    <option value="">Todas</option>
+                    <template x-for="param in parametrizacoes" :key="param.id">
+                        <option :value="param.id" x-text="param.tokenCompra?.simbolo + '/' + param.tokenVenda?.simbolo + ' - ' + param.exchange?.nome"></option>
+                    </template>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full table-glass">
+            <thead>
+                <tr>
+                    <th class="px-4 py-3 text-left">ID</th>
+                    <th class="px-4 py-3 text-left">Parametrização</th>
+                    <th class="px-4 py-3 text-left">Cotação</th>
+                    <th class="px-4 py-3 text-left">Data/Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="historico in historicos" :key="historico.id">
+                    <tr>
+                        <td class="px-4 py-3" x-text="historico.id"></td>
+                        <td class="px-4 py-3">
+                            <span x-text="historico.parametrizacao?.tokenCompra?.simbolo + '/' + historico.parametrizacao?.tokenVenda?.simbolo"></span>
+                            <span class="text-white/60" x-text="' - ' + historico.parametrizacao?.exchange?.nome"></span>
+                        </td>
+                        <td class="px-4 py-3 font-medium text-green-300" x-text="formatarMoeda(historico.cotacao)"></td>
+                        <td class="px-4 py-3" x-text="formatarData(historico.dataHoraConsulta)"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    
+    <div x-show="historicos.length === 0" class="text-center text-white/60 py-8">
+        Nenhum histórico de cotação encontrado
+    </div>
+</div>
+
+<script>
+function historicosPage() {
+    return {
+        historicos: [],
+        parametrizacoes: [],
+        filtroParametrizacao: '',
+        
+        async init() {
+            await this.carregarParametrizacoes();
+            await this.carregar();
+        },
+        
+        async carregarParametrizacoes() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch('/api/parametrizacoes', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.parametrizacoes = data.data || [];
+            } catch (e) {
+                console.error('Erro ao carregar parametrizações', e);
+            }
+        },
+        
+        async carregar() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                let url = '/api/historicos';
+                
+                if (this.filtroParametrizacao) {
+                    url = `/api/historicos/parametrizacao/${this.filtroParametrizacao}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                this.historicos = (data.data || []).reverse();
+            } catch (e) {
+                console.error('Erro ao carregar históricos', e);
+            }
+        },
+        
+        formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' }).format(valor);
+        },
+        
+        formatarData(data) {
+            if (!data) return '-';
+            return new Date(data).toLocaleString('pt-BR');
+        }
+    }
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('historicosPage', () => historicosPage());
+});
+</script>
+{/content}
+{/include}
