@@ -20,15 +20,18 @@ public class ParametrizacaoConsultaPreco extends PanacheEntityBase {
     public Rede rede;
 
     @ManyToOne
-    @JoinColumn(name = "token_compra_id", nullable = false)
-    public AtivoFinanceiro tokenCompra;
+    @JoinColumn(name = "ativo_desejado_id", nullable = false)
+    public AtivoFinanceiro ativoDesejado;
 
     @ManyToOne
-    @JoinColumn(name = "token_venda_id", nullable = false)
-    public AtivoFinanceiro tokenVenda;
+    @JoinColumn(name = "ativo_pagamento_id", nullable = false)
+    public AtivoFinanceiro ativoPagamento;
 
     @Column(name = "quantidade_compra", nullable = false)
     public Double quantidadeCompra;
+
+    @Column(name = "identificador_negociacao", length = 100)
+    public String identificadorNegociacao;
 
     @Column(nullable = false)
     public boolean ativa;

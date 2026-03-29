@@ -6,7 +6,7 @@ Aplicacao web para gerenciamento de ativos, exchanges, redes, parametrizacoes de
 
 - Backend REST em Java 17 com Quarkus 3.17.2
 - Persistencia com Hibernate ORM Panache
-- Banco H2 em memoria, recriado a cada subida
+- Banco H2 em arquivo local (`db/cryptodb.mv.db`)
 - Autenticacao com JWT e senhas com BCrypt
 - Frontend Vue 3 + Vue Router + Vite em `src/main/webui`
 - Porta padrao da aplicacao: `9001`
@@ -64,7 +64,7 @@ Entidades principais:
 - `Exchange`: nome, descricao, tipo, tipoApi, tokenApi, urlApi, logHabilitado
 - `Rede`: nome, urlExplorer
 - `AtivoFinanceiro`: nome, simbolo
-- `ParametrizacaoConsultaPreco`: exchange, rede, tokenCompra, tokenVenda, quantidadeCompra, ativa, logHabilitado
+- `ParametrizacaoConsultaPreco`: exchange, rede, ativoDesejado, ativoPagamento, quantidadeCompra, identificadorNegociacao, ativa, logHabilitado
 - `HistoricoCotacao`: parametrizacao, dataHoraConsulta, cotacaoCompra, cotacaoVenda
 
 Enums:
@@ -74,7 +74,7 @@ Enums:
 
 ## Dados iniciais
 
-Ao iniciar a aplicacao, o banco e recriado com os dados de `src/main/resources/import.sql`.
+Ao iniciar a aplicacao, o schema e sincronizado automaticamente com Hibernate (`database.generation=update`) e a carga inicial de referencia fica em `src/main/resources/import.sql`.
 
 Credenciais padrao:
 
@@ -89,6 +89,12 @@ Carga inicial incluida:
 - 8 ativos financeiros
 - 5 parametrizacoes
 - 5 registros de historico
+
+Exemplos de `identificadorNegociacao` nas parametrizacoes:
+
+- `BTCUSDT` para consultar Bitcoin/Tether na Binance
+- `ETHUSDT` para consultar Ethereum/Tether
+- `BTCUSDC` para consultar Bitcoin/USD Coin
 
 ## Como executar
 
@@ -228,6 +234,21 @@ Observacao: `reset-admin` e `check-admin` nao exigem autenticacao no estado atua
 - `PUT /api/parametrizacoes/{id}`
 - `DELETE /api/parametrizacoes/{id}`
 
+Payload relevante de parametrizacao:
+
+```json
+{
+  "exchange": { "id": 1 },
+  "rede": { "id": 1 },
+  "ativoDesejado": { "id": 1 },
+  "ativoPagamento": { "id": 3 },
+  "quantidadeCompra": 1.0,
+  "identificadorNegociacao": "BTCUSDT",
+  "ativa": true,
+  "logHabilitado": true
+}
+```
+
 ### Historicos
 
 - `GET /api/historicos`
@@ -254,6 +275,7 @@ Comportamento principal:
 - redireciona para `/login` ao receber `401`
 - exibe dashboard com contadores e ultimas 10 cotacoes
 - permite criar, editar e excluir ativos, exchanges, redes e parametrizacoes
+- a tela de parametrizacoes permite informar o `identificadorNegociacao` usado pela exchange para buscar cotacoes
 - permite filtrar historicos por parametrizacao e excluir registros
 
 ## Estrutura do projeto
@@ -285,7 +307,8 @@ crypto-manager/
 
 ## Observacoes importantes
 
-- O banco H2 e em memoria e usa `drop-and-create`, entao todos os dados sao reinicializados a cada start.
+- O banco H2 fica no arquivo `db/cryptodb.mv.db` e o schema e atualizado automaticamente pelo Hibernate.
+- Para bases ja existentes, os ajustes manuais ficam em `db/scripts/`, incluindo `20260329_add_identificador_negociacao.sql` e `20260329_rename_token_columns.sql`.
 - O frontend antigo descrito no README anterior com Qute, HTMX e Alpine.js nao corresponde mais ao estado atual do projeto.
 - Nao ha testes automatizados em `src/test` no momento.
 - Existe um utilitario `GenerateKeys.java` na raiz para gerar novo par de chaves JWT em `src/main/resources`.

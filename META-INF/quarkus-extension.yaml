@@ -1,0 +1,53 @@
+---
+name: "Quinoa"
+metadata:
+  keywords:
+  - "quinoa"
+  - "ui"
+  - "react"
+  - "angular"
+  - "vue"
+  - "lit"
+  - "svelte"
+  - "astro"
+  - "solidjs"
+  - "emberjs"
+  - "aurelia"
+  - "polymer"
+  - "spa"
+  - "node"
+  - "nodejs"
+  - "npm"
+  - "web"
+  - "frontend"
+  guide: "https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/index.html"
+  icon-url: "https://raw.githubusercontent.com/quarkiverse/quarkus-quinoa/main/docs/modules/ROOT/assets/images/npm-logo.svg"
+  categories:
+  - "web"
+  config:
+  - "quarkus.quinoa."
+  status: "stable"
+  codestart:
+    name: "quinoa"
+    languages:
+    - "java"
+    - "kotlin"
+    - "scala"
+    artifact: "io.quarkiverse.quinoa:quarkus-quinoa:codestarts:jar:2.5.5"
+  built-with-quarkus-core: "3.15.1"
+  requires-quarkus-core: "[3.15,)"
+  minimum-java-version: "17"
+  scm-url: "https://github.com/quarkiverse/quarkus-quinoa"
+  extension-dependencies:
+  - "io.quarkus:quarkus-arc"
+  - "io.quarkus:quarkus-core"
+  - "io.quarkus:quarkus-vertx-http"
+  - "io.quarkus:quarkus-tls-registry"
+  - "io.quarkus:quarkus-mutiny"
+  - "io.quarkus:quarkus-smallrye-context-propagation"
+  - "io.quarkus:quarkus-vertx"
+  - "io.quarkus:quarkus-netty"
+  - "io.quarkus:quarkus-virtual-threads"
+artifact: "io.quarkiverse.quinoa:quarkus-quinoa::jar:2.5.5"
+description: "Develop, build, and serve your npm-compatible web applications such\
+  \ as React, Angular, Vue, Lit, Svelte, Astro, SolidJS, and others alongside Quarkus."

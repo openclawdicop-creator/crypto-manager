@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [vue()],
   base: './', // Garante que assets sejam importados usando caminhos relativos
   server: {
-    allowedHosts: ['openclaw-dicop.duckdns.org']
+    host: 'localhost',
+    port: 5173,
+    strictPort: true,
+    allowedHosts: ['localhost', '127.0.0.1', 'openclaw-dicop.duckdns.org']
   }
 })

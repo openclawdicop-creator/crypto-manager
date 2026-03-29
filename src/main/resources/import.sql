@@ -28,12 +28,12 @@ INSERT INTO ativo_financeiro (id, nome, simbolo) VALUES
 (8, 'Polygon', 'MATIC');
 
 -- Insert sample price query configurations
-INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, token_compra_id, token_venda_id, quantidade_compra, ativa, log_habilitado) VALUES
-(1, 1, 1, 1, 3, 1.0, true, true),
-(2, 1, 1, 2, 3, 10.0, true, true),
-(3, 2, 1, 1, 5, 0.5, true, false),
-(4, 3, 1, 2, 3, 5.0, true, true),
-(5, 1, 3, 4, 3, 2.0, false, true);
+INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, ativo_desejado_id, ativo_pagamento_id, quantidade_compra, identificador_negociacao, ativa, log_habilitado) VALUES
+(1, 1, 1, 1, 3, 1.0, 'BTCUSDT', true, true),
+(2, 1, 1, 2, 3, 10.0, 'ETHUSDT', true, true),
+(3, 2, 1, 1, 5, 0.5, 'BTCUSDC', true, false),
+(4, 3, 1, 2, 3, 5.0, 'ETHUSDT', true, true),
+(5, 1, 3, 4, 3, 2.0, 'BNBUSDT', false, true);
 
 -- Insert sample price history
 INSERT INTO historico_cotacao (id, parametrizacao_id, data_hora_consulta, cotacao_compra, cotacao_venda) VALUES

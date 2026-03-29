@@ -1,0 +1,5 @@
+ALTER TABLE parametrizacao_consulta_preco
+RENAME COLUMN token_compra_id TO ativo_desejado_id;
+
+ALTER TABLE parametrizacao_consulta_preco
+RENAME COLUMN token_venda_id TO ativo_pagamento_id;

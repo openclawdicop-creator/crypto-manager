@@ -1,10 +1,10 @@
 <template>
   <div class="param-container">
     <div class="header-actions">
-      <h2>Gerenciamento de Parametrizações</h2>
+      <h2>Gerenciamento de Parametrizacoes</h2>
       <button @click="openModal()" class="primary-btn">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Nova Parametrização
+        Nova Parametrizacao
       </button>
     </div>
 
@@ -14,7 +14,7 @@
 
     <div class="glass-card">
       <div v-if="loading" class="loading-state">
-        <span class="spinner"></span> Carregando parametrizações...
+        <span class="spinner"></span> Carregando parametrizacoes...
       </div>
       <div class="table-responsive" v-else>
         <table class="modern-table">
@@ -23,30 +23,34 @@
               <th>ID</th>
               <th>Exchange</th>
               <th>Rede</th>
-              <th>Compra</th>
-              <th>Venda</th>
-              <th>Qtd. Compra</th>
+              <th>Desejado</th>
+              <th>Pagamento</th>
+              <th>Identificador</th>
+              <th>Qtd. Desejada</th>
               <th>Status</th>
-              <th class="actions-col">Ações</th>
+              <th class="actions-col">Acoes</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="parametrizacoes.length === 0">
-              <td colspan="8" class="empty-state">Nenhuma parametrização cadastrada. Clique em "Nova Parametrização" para adicionar.</td>
+              <td colspan="9" class="empty-state">Nenhuma parametrizacao cadastrada. Clique em "Nova Parametrizacao" para adicionar.</td>
             </tr>
             <tr v-for="p in parametrizacoes" :key="p.id">
               <td data-label="ID"><strong>#{{ p.id }}</strong></td>
               <td data-label="Exchange">{{ p.exchange?.nome || '-' }}</td>
               <td data-label="Rede">{{ p.rede?.nome || '-' }}</td>
-              <td data-label="Compra"><span class="token-badge buy">{{ p.tokenCompra?.simbolo || '-' }}</span></td>
-              <td data-label="Venda"><span class="token-badge sell">{{ p.tokenVenda?.simbolo || '-' }}</span></td>
-              <td data-label="Qtd. Compra">{{ p.quantidadeCompra }}</td>
+              <td data-label="Desejado"><span class="token-badge buy">{{ p.ativoDesejado?.simbolo || '-' }}</span></td>
+              <td data-label="Pagamento"><span class="token-badge sell">{{ p.ativoPagamento?.simbolo || '-' }}</span></td>
+              <td data-label="Identificador">
+                <span class="identifier-badge">{{ p.identificadorNegociacao || '-' }}</span>
+              </td>
+              <td data-label="Qtd. Desejada">{{ p.quantidadeCompra }}</td>
               <td data-label="Status">
                 <span :class="['status-badge', p.ativa ? 'active' : 'inactive']">
                   {{ p.ativa ? 'Ativa' : 'Inativa' }}
                 </span>
               </td>
-              <td data-label="Ações" class="actions-col">
+              <td data-label="Acoes" class="actions-col">
                 <div class="action-buttons">
                   <button @click="openModal(p)" class="icon-btn edit-btn" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -62,15 +66,14 @@
       </div>
     </div>
 
-    <!-- Modal Formulário -->
     <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3>{{ editingId ? 'Editar Parametrização' : 'Nova Parametrização' }}</h3>
+          <h3>{{ editingId ? 'Editar Parametrizacao' : 'Nova Parametrizacao' }}</h3>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         <div v-if="loadingOptions" class="loading-state" style="padding:1.5rem;">
-          <span class="spinner"></span> Carregando opções...
+          <span class="spinner"></span> Carregando opcoes...
         </div>
         <form v-else @submit.prevent="saveParametrizacao" class="modern-form">
           <div class="form-group">
@@ -89,28 +92,39 @@
           </div>
           <div class="form-row">
             <div class="form-group half-width">
-              <label>Token de Compra *</label>
-              <select v-model="form.tokenCompraId" required>
+              <label>Ativo Desejado *</label>
+              <select v-model="form.ativoDesejadoId" required>
                 <option value="" disabled>Selecione</option>
-                <option v-for="a in ativos" :key="a.id" :value="a.id">{{ a.simbolo }} – {{ a.nome }}</option>
+                <option v-for="a in ativos" :key="a.id" :value="a.id">{{ a.simbolo }} - {{ a.nome }}</option>
               </select>
             </div>
             <div class="form-group half-width">
-              <label>Token de Venda *</label>
-              <select v-model="form.tokenVendaId" required>
+              <label>Ativo de Pagamento *</label>
+              <select v-model="form.ativoPagamentoId" required>
                 <option value="" disabled>Selecione</option>
-                <option v-for="a in ativos" :key="a.id" :value="a.id">{{ a.simbolo }} – {{ a.nome }}</option>
+                <option v-for="a in ativos" :key="a.id" :value="a.id">{{ a.simbolo }} - {{ a.nome }}</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label>Quantidade de Compra *</label>
+            <label>Quantidade Desejada *</label>
             <input v-model.number="form.quantidadeCompra" type="number" step="any" min="0" placeholder="Ex: 0.1" required />
+          </div>
+          <div class="form-group">
+            <label>Identificador de Negociacao *</label>
+            <input
+              v-model.trim="form.identificadorNegociacao"
+              type="text"
+              maxlength="100"
+              placeholder="Ex: BTCUSDT"
+              required
+            />
+            <small class="field-help">Codigo usado pela exchange para consultar cotacoes do par. Exemplo na Binance: BTCUSDT.</small>
           </div>
           <div class="form-row checks-row">
             <label class="checkbox-label">
               <input type="checkbox" v-model="form.ativa" />
-              Parametrização Ativa
+              Parametrizacao Ativa
             </label>
             <label class="checkbox-label">
               <input type="checkbox" v-model="form.logHabilitado" />
@@ -127,16 +141,15 @@
       </div>
     </div>
 
-    <!-- Modal Confirmação Exclusão -->
     <div v-if="isDeleteModalOpen" class="modal-overlay" @click.self="closeDeleteModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3 style="color: #ef4444;">Confirmar Exclusão</h3>
+          <h3 style="color: #ef4444;">Confirmar Exclusao</h3>
           <button @click="closeDeleteModal" class="close-btn">&times;</button>
         </div>
         <div style="margin-bottom: 1.5rem; color: #334155;">
-          Tem certeza que deseja excluir a parametrização <strong>#{{ itemToDelete?.id }}</strong>?
-          <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Esta ação não poderá ser desfeita.</p>
+          Tem certeza que deseja excluir a parametrizacao <strong>#{{ itemToDelete?.id }}</strong>?
+          <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Esta acao nao podera ser desfeita.</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeDeleteModal">Cancelar</button>
@@ -167,9 +180,10 @@ const editingId = ref(null)
 const defaultForm = {
   exchangeId: '',
   redeId: '',
-  tokenCompraId: '',
-  tokenVendaId: '',
+  ativoDesejadoId: '',
+  ativoPagamentoId: '',
   quantidadeCompra: '',
+  identificadorNegociacao: '',
   ativa: true,
   logHabilitado: false
 }
@@ -180,16 +194,16 @@ const alertType = ref('info')
 const showAlert = (message, type = 'info') => {
   alertMessage.value = message
   alertType.value = type
-  setTimeout(() => alertMessage.value = '', 5000)
+  setTimeout(() => (alertMessage.value = ''), 5000)
 }
 
 const loadParametrizacoes = async () => {
   loading.value = true
   try {
     const res = await apiFetch('/api/parametrizacoes')
-    parametrizacoes.value = (res && res.data) ? res.data : []
+    parametrizacoes.value = res && res.data ? res.data : []
   } catch (error) {
-    showAlert(error.message || 'Erro ao carregar parametrizações', 'error')
+    showAlert(error.message || 'Erro ao carregar parametrizacoes', 'error')
   } finally {
     loading.value = false
   }
@@ -203,11 +217,11 @@ const loadOptions = async () => {
       apiFetch('/api/redes'),
       apiFetch('/api/ativos')
     ])
-    exchanges.value = (resEx && resEx.data) ? resEx.data : []
-    redes.value = (resRedes && resRedes.data) ? resRedes.data : []
-    ativos.value = (resAtivos && resAtivos.data) ? resAtivos.data : []
+    exchanges.value = resEx && resEx.data ? resEx.data : []
+    redes.value = resRedes && resRedes.data ? resRedes.data : []
+    ativos.value = resAtivos && resAtivos.data ? resAtivos.data : []
   } catch (error) {
-    showAlert('Erro ao carregar opções do formulário', 'error')
+    showAlert('Erro ao carregar opcoes do formulario', 'error')
   } finally {
     loadingOptions.value = false
   }
@@ -221,9 +235,10 @@ const openModal = async (p = null) => {
     form.value = {
       exchangeId: p.exchange?.id || '',
       redeId: p.rede?.id || '',
-      tokenCompraId: p.tokenCompra?.id || '',
-      tokenVendaId: p.tokenVenda?.id || '',
+      ativoDesejadoId: p.ativoDesejado?.id || '',
+      ativoPagamentoId: p.ativoPagamento?.id || '',
       quantidadeCompra: p.quantidadeCompra,
+      identificadorNegociacao: p.identificadorNegociacao || '',
       ativa: p.ativa,
       logHabilitado: p.logHabilitado
     }
@@ -245,9 +260,10 @@ const saveParametrizacao = async () => {
     const payload = {
       exchange: { id: form.value.exchangeId },
       rede: { id: form.value.redeId },
-      tokenCompra: { id: form.value.tokenCompraId },
-      tokenVenda: { id: form.value.tokenVendaId },
+      ativoDesejado: { id: form.value.ativoDesejadoId },
+      ativoPagamento: { id: form.value.ativoPagamentoId },
       quantidadeCompra: form.value.quantidadeCompra,
+      identificadorNegociacao: form.value.identificadorNegociacao,
       ativa: form.value.ativa,
       logHabilitado: form.value.logHabilitado
     }
@@ -257,7 +273,7 @@ const saveParametrizacao = async () => {
     const res = await apiFetch(url, { method, body: JSON.stringify(payload) })
     if (res && res.error) throw new Error(res.message || 'Erro do servidor')
 
-    showAlert(editingId.value ? 'Parametrização atualizada!' : 'Parametrização criada!', 'success')
+    showAlert(editingId.value ? 'Parametrizacao atualizada!' : 'Parametrizacao criada!', 'success')
     closeModal()
     await loadParametrizacoes()
   } catch (error) {
@@ -282,7 +298,7 @@ const executeDelete = async () => {
   try {
     const res = await apiFetch(`/api/parametrizacoes/${itemToDelete.value.id}`, { method: 'DELETE' })
     if (res && res.error) throw new Error(res.message)
-    showAlert('Parametrização excluída com sucesso.', 'success')
+    showAlert('Parametrizacao excluida com sucesso.', 'success')
     closeDeleteModal()
     await loadParametrizacoes()
   } catch (error) {
@@ -385,6 +401,18 @@ onMounted(() => {
 }
 .token-badge.buy { background: #dcfce7; color: #15803d; }
 .token-badge.sell { background: #fee2e2; color: #b91c1c; }
+
+.identifier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
 
 .status-badge {
   font-size: 0.8rem;
@@ -491,6 +519,12 @@ onMounted(() => {
 
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
 .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+
+.field-help {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
 
 .form-group input,
 .form-group select {
@@ -618,4 +652,3 @@ onMounted(() => {
   .checks-row { flex-direction: column; gap: 0.75rem; }
 }
 </style>
-

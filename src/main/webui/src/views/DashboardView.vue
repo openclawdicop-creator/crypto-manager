@@ -33,8 +33,8 @@
           {{ loading ? '...' : (ultimaConsulta ? formatDate(ultimaConsulta.dataHoraConsulta) : 'Nenhuma consulta registrada') }}
         </span>
         <span v-if="ultimaConsulta && !loading" class="last-check-detail">
-          {{ ultimaConsulta.parametrizacao?.tokenCompra?.simbolo || '?' }} /
-          {{ ultimaConsulta.parametrizacao?.tokenVenda?.simbolo || '?' }}
+          {{ ultimaConsulta.parametrizacao?.ativoDesejado?.simbolo || '?' }} /
+          {{ ultimaConsulta.parametrizacao?.ativoPagamento?.simbolo || '?' }}
           via {{ ultimaConsulta.parametrizacao?.exchange?.nome || '?' }}
           - compra: <strong>{{ formatCotacao(ultimaConsulta.cotacaoCompra) }}</strong>
           | venda: <strong>{{ formatCotacao(ultimaConsulta.cotacaoVenda) }}</strong>
@@ -83,9 +83,9 @@
                 <span class="id-badge">#{{ h.id }}</span>
               </td>
               <td data-label="Par de Tokens">
-                <span class="token-badge buy">{{ h.parametrizacao?.tokenCompra?.simbolo || '?' }}</span>
+                <span class="token-badge buy">{{ h.parametrizacao?.ativoDesejado?.simbolo || '?' }}</span>
                 <span class="pair-sep">/</span>
-                <span class="token-badge sell">{{ h.parametrizacao?.tokenVenda?.simbolo || '?' }}</span>
+                <span class="token-badge sell">{{ h.parametrizacao?.ativoPagamento?.simbolo || '?' }}</span>
               </td>
               <td data-label="Exchange">
                 <span class="exchange-name">{{ h.parametrizacao?.exchange?.nome || '-' }}</span>

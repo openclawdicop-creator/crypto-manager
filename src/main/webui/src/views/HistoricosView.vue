@@ -6,7 +6,7 @@
         <select v-model="filtroParametrizacaoId" @change="loadHistoricos" class="filter-select">
           <option value="">Todos</option>
           <option v-for="p in parametrizacoes" :key="p.id" :value="p.id">
-            #{{ p.id }} - {{ p.tokenCompra?.simbolo }}/{{ p.tokenVenda?.simbolo }} ({{ p.exchange?.nome }})
+            #{{ p.id }} - {{ p.ativoDesejado?.simbolo }}/{{ p.ativoPagamento?.simbolo }} ({{ p.exchange?.nome }})
           </option>
         </select>
       </div>
@@ -44,9 +44,9 @@
                 {{ h.parametrizacao?.exchange?.nome || '' }}
               </td>
               <td data-label="Par de Tokens">
-                <span class="token-badge buy">{{ h.parametrizacao?.tokenCompra?.simbolo || '?' }}</span>
+                <span class="token-badge buy">{{ h.parametrizacao?.ativoDesejado?.simbolo || '?' }}</span>
                 <span class="pair-separator">/</span>
-                <span class="token-badge sell">{{ h.parametrizacao?.tokenVenda?.simbolo || '?' }}</span>
+                <span class="token-badge sell">{{ h.parametrizacao?.ativoPagamento?.simbolo || '?' }}</span>
               </td>
               <td data-label="Cotacao Compra"><strong class="cotacao-value">{{ formatCotacao(h.cotacaoCompra) }}</strong></td>
               <td data-label="Cotacao Venda"><strong class="cotacao-value">{{ formatCotacao(h.cotacaoVenda) }}</strong></td>

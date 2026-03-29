@@ -41,9 +41,10 @@ public class ParametrizacaoConsultaPrecoService {
         }
         parametrizacao.exchange = parametrizacaoAtualizada.exchange;
         parametrizacao.rede = parametrizacaoAtualizada.rede;
-        parametrizacao.tokenCompra = parametrizacaoAtualizada.tokenCompra;
-        parametrizacao.tokenVenda = parametrizacaoAtualizada.tokenVenda;
+        parametrizacao.ativoDesejado = parametrizacaoAtualizada.ativoDesejado;
+        parametrizacao.ativoPagamento = parametrizacaoAtualizada.ativoPagamento;
         parametrizacao.quantidadeCompra = parametrizacaoAtualizada.quantidadeCompra;
+        parametrizacao.identificadorNegociacao = parametrizacaoAtualizada.identificadorNegociacao;
         parametrizacao.ativa = parametrizacaoAtualizada.ativa;
         parametrizacao.logHabilitado = parametrizacaoAtualizada.logHabilitado;
         parametrizacaoConsultaPrecoRepository.persist(parametrizacao);
