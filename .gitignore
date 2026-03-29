@@ -30,3 +30,9 @@ Thumbs.db
 # Keys (keep private keys out of version control)
 private_key.pem
 src/main/resources/private_key.pem
+
+# Database - versionar o arquivo do banco H2
+# O arquivo db/cryptodb.mv.db DEVE ser rastreado pelo git
+!db/
+!db/.gitkeep
+!db/*.mv.db

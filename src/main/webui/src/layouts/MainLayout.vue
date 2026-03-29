@@ -12,9 +12,9 @@
       </div>
       <nav class="sidebar-nav">
         <router-link to="/dashboard" class="nav-item" active-class="active" @click="closeSidebar">Dashboard</router-link>
-        <router-link to="/ativos" class="nav-item" active-class="active" @click="closeSidebar">Ativos</router-link>
-        <router-link to="/exchanges" class="nav-item" active-class="active" @click="closeSidebar">Exchanges</router-link>
         <router-link to="/redes" class="nav-item" active-class="active" @click="closeSidebar">Redes</router-link>
+        <router-link to="/exchanges" class="nav-item" active-class="active" @click="closeSidebar">Exchanges</router-link>
+        <router-link to="/ativos" class="nav-item" active-class="active" @click="closeSidebar">Ativos</router-link>
         <router-link to="/parametrizacoes" class="nav-item" active-class="active" @click="closeSidebar">Parametrizações</router-link>
         <router-link to="/historicos" class="nav-item" active-class="active" @click="closeSidebar">Histórico</router-link>
       </nav>
