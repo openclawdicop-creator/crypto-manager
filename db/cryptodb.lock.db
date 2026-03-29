@@ -1,6 +1,6 @@
 #FileLock
-#Sun Mar 29 14:04:55 BRT 2026
-server=192.168.4.38\:64841
+#Sun Mar 29 14:32:06 BRT 2026
+server=192.168.4.38\:53046
 hostName=note-dell
 method=file
-id=19d3a8e3c51cc65fbc261432407b1ebd9cf5fa4f8b4
+id=19d3aa727a252da8b2acb2ce9ac188aae302742477d

@@ -36,9 +36,9 @@ INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, token_compr
 (5, 1, 3, 4, 3, 2.0, false, true);
 
 -- Insert sample price history
-INSERT INTO historico_cotacao (id, parametrizacao_id, data_hora_consulta, cotacao) VALUES
-(1, 1, CURRENT_TIMESTAMP(), 42500.50),
-(2, 1, CURRENT_TIMESTAMP(), 42650.75),
-(3, 2, CURRENT_TIMESTAMP(), 2280.30),
-(4, 3, CURRENT_TIMESTAMP(), 42480.00),
-(5, 4, CURRENT_TIMESTAMP(), 2275.80);
+INSERT INTO historico_cotacao (id, parametrizacao_id, data_hora_consulta, cotacao_compra, cotacao_venda) VALUES
+(1, 1, CURRENT_TIMESTAMP(), 42500.50, 42480.10),
+(2, 1, CURRENT_TIMESTAMP(), 42650.75, 42610.20),
+(3, 2, CURRENT_TIMESTAMP(), 2280.30, 2274.90),
+(4, 3, CURRENT_TIMESTAMP(), 42480.00, 42440.55),
+(5, 4, CURRENT_TIMESTAMP(), 2275.80, 2270.35);

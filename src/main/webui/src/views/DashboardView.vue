@@ -28,7 +28,7 @@
         </svg>
       </div>
       <div class="last-check-text">
-        <span class="last-check-title">Última Consulta de Preço</span>
+        <span class="last-check-title">Ultima Consulta de Preco</span>
         <span class="last-check-value" :class="{ 'no-data': !ultimaConsulta }">
           {{ loading ? '...' : (ultimaConsulta ? formatDate(ultimaConsulta.dataHoraConsulta) : 'Nenhuma consulta registrada') }}
         </span>
@@ -36,7 +36,8 @@
           {{ ultimaConsulta.parametrizacao?.tokenCompra?.simbolo || '?' }} /
           {{ ultimaConsulta.parametrizacao?.tokenVenda?.simbolo || '?' }}
           via {{ ultimaConsulta.parametrizacao?.exchange?.nome || '?' }}
-          — cotação: <strong>{{ formatCotacao(ultimaConsulta.cotacao) }}</strong>
+          - compra: <strong>{{ formatCotacao(ultimaConsulta.cotacaoCompra) }}</strong>
+          | venda: <strong>{{ formatCotacao(ultimaConsulta.cotacaoVenda) }}</strong>
         </span>
       </div>
     </div>
@@ -44,7 +45,7 @@
     <!-- Recent Price Checks Table -->
     <div class="section glass-card">
       <div class="section-header">
-        <h3>Últimas 10 Consultas de Preço</h3>
+        <h3>Ultimas 10 Consultas de Preco</h3>
         <span class="badge">{{ recentHistoricos.length }} registros</span>
       </div>
 
@@ -61,7 +62,7 @@
           <line x1="16" y1="17" x2="8" y2="17"/>
           <polyline points="10 9 9 9 8 9"/>
         </svg>
-        <p>Nenhuma consulta de preço registrada ainda.</p>
+        <p>Nenhuma consulta de preco registrada ainda.</p>
       </div>
 
       <div v-else class="table-responsive">
@@ -71,7 +72,8 @@
               <th>#</th>
               <th>Par de Tokens</th>
               <th>Exchange</th>
-              <th>Cotação</th>
+              <th>Cotacao Compra</th>
+              <th>Cotacao Venda</th>
               <th>Data / Hora</th>
             </tr>
           </thead>
@@ -86,10 +88,13 @@
                 <span class="token-badge sell">{{ h.parametrizacao?.tokenVenda?.simbolo || '?' }}</span>
               </td>
               <td data-label="Exchange">
-                <span class="exchange-name">{{ h.parametrizacao?.exchange?.nome || '—' }}</span>
+                <span class="exchange-name">{{ h.parametrizacao?.exchange?.nome || '-' }}</span>
               </td>
-              <td data-label="Cotação">
-                <span class="cotacao">{{ formatCotacao(h.cotacao) }}</span>
+              <td data-label="Cotacao Compra">
+                <span class="cotacao">{{ formatCotacao(h.cotacaoCompra) }}</span>
+              </td>
+              <td data-label="Cotacao Venda">
+                <span class="cotacao">{{ formatCotacao(h.cotacaoVenda) }}</span>
               </td>
               <td data-label="Data / Hora">
                 <span class="datetime">{{ formatDate(h.dataHoraConsulta) }}</span>
@@ -114,7 +119,6 @@ const redes = ref([])
 const parametrizacoes = ref([])
 const historicos = ref([])
 
-// Ordenar histórico por data desc
 const sortedHistoricos = computed(() =>
   [...historicos.value].sort((a, b) => new Date(b.dataHoraConsulta) - new Date(a.dataHoraConsulta))
 )
@@ -142,7 +146,7 @@ const stats = computed(() => [
     color: 'linear-gradient(135deg, #10b981, #059669)'
   },
   {
-    label: 'Parametrizações',
+    label: 'Parametrizacoes',
     value: parametrizacoes.value.length,
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>',
     color: 'linear-gradient(135deg, #f59e0b, #d97706)'
@@ -156,7 +160,7 @@ const stats = computed(() => [
 ])
 
 const formatCotacao = (v) => {
-  if (v == null) return '—'
+  if (v == null) return '-'
   return new Intl.NumberFormat('pt-BR', {
     style: 'decimal',
     minimumFractionDigits: 2,
@@ -165,7 +169,7 @@ const formatCotacao = (v) => {
 }
 
 const formatDate = (dt) => {
-  if (!dt) return '—'
+  if (!dt) return '-'
   return new Date(dt).toLocaleString('pt-BR')
 }
 
@@ -180,11 +184,11 @@ onMounted(async () => {
       safe(() => apiFetch('/api/parametrizacoes')),
       safe(() => apiFetch('/api/historicos'))
     ])
-    ativos.value        = r1?.data ?? []
-    exchanges.value     = r2?.data ?? []
-    redes.value         = r3?.data ?? []
+    ativos.value = r1?.data ?? []
+    exchanges.value = r2?.data ?? []
+    redes.value = r3?.data ?? []
     parametrizacoes.value = r4?.data ?? []
-    historicos.value    = r5?.data ?? []
+    historicos.value = r5?.data ?? []
   } finally {
     loading.value = false
   }
@@ -198,7 +202,6 @@ onMounted(async () => {
   gap: 1.5rem;
 }
 
-/* ── Stats Grid ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -263,7 +266,6 @@ onMounted(async () => {
   100% { background-position: -200% 0; }
 }
 
-/* ── Glass Card Base ── */
 .glass-card {
   background: white;
   border-radius: 16px;
@@ -271,7 +273,6 @@ onMounted(async () => {
   border: 1px solid #f1f5f9;
 }
 
-/* ── Last Check Banner ── */
 .last-check-banner {
   display: flex;
   align-items: flex-start;
@@ -323,7 +324,6 @@ onMounted(async () => {
   color: #475569;
 }
 
-/* ── Section (table area) ── */
 .section {
   padding: 1.5rem;
 }
@@ -353,7 +353,6 @@ onMounted(async () => {
   border-radius: 20px;
 }
 
-/* ── Table ── */
 .table-responsive { overflow-x: auto; }
 
 .modern-table {
@@ -427,7 +426,6 @@ onMounted(async () => {
   color: #64748b;
 }
 
-/* ── States ── */
 .loading-state {
   display: flex;
   align-items: center;
@@ -464,7 +462,6 @@ onMounted(async () => {
   font-size: 0.9rem;
 }
 
-/* ── Responsive ── */
 @media (max-width: 640px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);

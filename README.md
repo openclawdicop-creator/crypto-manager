@@ -65,7 +65,7 @@ Entidades principais:
 - `Rede`: nome, urlExplorer
 - `AtivoFinanceiro`: nome, simbolo
 - `ParametrizacaoConsultaPreco`: exchange, rede, tokenCompra, tokenVenda, quantidadeCompra, ativa, logHabilitado
-- `HistoricoCotacao`: parametrizacao, dataHoraConsulta, cotacao
+- `HistoricoCotacao`: parametrizacao, dataHoraConsulta, cotacaoCompra, cotacaoVenda
 
 Enums:
 
@@ -289,4 +289,3 @@ crypto-manager/
 - O frontend antigo descrito no README anterior com Qute, HTMX e Alpine.js nao corresponde mais ao estado atual do projeto.
 - Nao ha testes automatizados em `src/test` no momento.
 - Existe um utilitario `GenerateKeys.java` na raiz para gerar novo par de chaves JWT em `src/main/resources`.
-

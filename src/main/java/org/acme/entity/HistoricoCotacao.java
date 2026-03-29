@@ -19,6 +19,9 @@ public class HistoricoCotacao extends PanacheEntityBase {
     @Column(name = "data_hora_consulta", nullable = false)
     public LocalDateTime dataHoraConsulta;
 
-    @Column(nullable = false)
-    public Double cotacao;
+    @Column(name = "cotacao_compra", nullable = false)
+    public Double cotacaoCompra;
+
+    @Column(name = "cotacao_venda", nullable = false)
+    public Double cotacaoVenda;
 }

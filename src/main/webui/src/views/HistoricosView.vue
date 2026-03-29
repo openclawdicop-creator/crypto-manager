@@ -1,12 +1,12 @@
 <template>
   <div class="historicos-container">
     <div class="header-actions">
-      <h2>Histórico de Cotações</h2>
+      <h2>Historico de Cotacoes</h2>
       <div class="header-right">
         <select v-model="filtroParametrizacaoId" @change="loadHistoricos" class="filter-select">
           <option value="">Todos</option>
           <option v-for="p in parametrizacoes" :key="p.id" :value="p.id">
-            #{{ p.id }} – {{ p.tokenCompra?.simbolo }}/{{ p.tokenVenda?.simbolo }} ({{ p.exchange?.nome }})
+            #{{ p.id }} - {{ p.tokenCompra?.simbolo }}/{{ p.tokenVenda?.simbolo }} ({{ p.exchange?.nome }})
           </option>
         </select>
       </div>
@@ -18,27 +18,28 @@
 
     <div class="glass-card">
       <div v-if="loading" class="loading-state">
-        <span class="spinner"></span> Carregando histórico...
+        <span class="spinner"></span> Carregando historico...
       </div>
       <div class="table-responsive" v-else>
         <table class="modern-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Parametrização</th>
+              <th>Parametrizacao</th>
               <th>Par de Tokens</th>
-              <th>Cotação</th>
+              <th>Cotacao Compra</th>
+              <th>Cotacao Venda</th>
               <th>Data / Hora</th>
-              <th class="actions-col">Ações</th>
+              <th class="actions-col">Acoes</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="historicos.length === 0">
-              <td colspan="6" class="empty-state">Nenhum histórico de cotação encontrado.</td>
+              <td colspan="7" class="empty-state">Nenhum historico de cotacao encontrado.</td>
             </tr>
             <tr v-for="h in historicos" :key="h.id">
               <td data-label="ID"><strong>#{{ h.id }}</strong></td>
-              <td data-label="Parametrização">
+              <td data-label="Parametrizacao">
                 <span class="param-ref">#{{ h.parametrizacao?.id }}</span>
                 {{ h.parametrizacao?.exchange?.nome || '' }}
               </td>
@@ -47,9 +48,10 @@
                 <span class="pair-separator">/</span>
                 <span class="token-badge sell">{{ h.parametrizacao?.tokenVenda?.simbolo || '?' }}</span>
               </td>
-              <td data-label="Cotação"><strong class="cotacao-value">{{ formatCotacao(h.cotacao) }}</strong></td>
+              <td data-label="Cotacao Compra"><strong class="cotacao-value">{{ formatCotacao(h.cotacaoCompra) }}</strong></td>
+              <td data-label="Cotacao Venda"><strong class="cotacao-value">{{ formatCotacao(h.cotacaoVenda) }}</strong></td>
               <td data-label="Data / Hora">{{ formatDate(h.dataHoraConsulta) }}</td>
-              <td data-label="Ações" class="actions-col">
+              <td data-label="Acoes" class="actions-col">
                 <div class="action-buttons">
                   <button @click="confirmDelete(h)" class="icon-btn delete-btn" title="Excluir">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
@@ -62,16 +64,15 @@
       </div>
     </div>
 
-    <!-- Modal Confirmação Exclusão -->
     <div v-if="isDeleteModalOpen" class="modal-overlay" @click.self="closeDeleteModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3 style="color: #ef4444;">Confirmar Exclusão</h3>
+          <h3 style="color: #ef4444;">Confirmar Exclusao</h3>
           <button @click="closeDeleteModal" class="close-btn">&times;</button>
         </div>
         <div style="margin-bottom: 1.5rem; color: #334155;">
-          Tem certeza que deseja excluir o registro de cotação <strong>#{{ itemToDelete?.id }}</strong>?
-          <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Esta ação não poderá ser desfeita.</p>
+          Tem certeza que deseja excluir o registro de cotacao <strong>#{{ itemToDelete?.id }}</strong>?
+          <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Esta acao nao podera ser desfeita.</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeDeleteModal">Cancelar</button>
@@ -103,7 +104,11 @@ const showAlert = (message, type = 'info') => {
 
 const formatCotacao = (v) => {
   if (v == null) return '-'
-  return new Intl.NumberFormat('pt-BR', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 8 }).format(v)
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 8
+  }).format(v)
 }
 
 const formatDate = (dt) => {
@@ -121,7 +126,7 @@ const loadHistoricos = async () => {
     const res = await apiFetch(url)
     historicos.value = (res && res.data) ? res.data : []
   } catch (error) {
-    showAlert(error.message || 'Erro ao carregar histórico', 'error')
+    showAlert(error.message || 'Erro ao carregar historico', 'error')
   } finally {
     loading.value = false
   }
@@ -149,7 +154,7 @@ const executeDelete = async () => {
   try {
     const res = await apiFetch(`/api/historicos/${itemToDelete.value.id}`, { method: 'DELETE' })
     if (res && res.error) throw new Error(res.message)
-    showAlert('Registro excluído com sucesso.', 'success')
+    showAlert('Registro excluido com sucesso.', 'success')
     closeDeleteModal()
     await loadHistoricos()
   } catch (error) {
@@ -451,4 +456,3 @@ onMounted(async () => {
   .actions-col { width: 100%; justify-content: flex-end !important; }
 }
 </style>
-
