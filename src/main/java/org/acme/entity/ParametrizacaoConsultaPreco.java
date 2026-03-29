@@ -27,8 +27,8 @@ public class ParametrizacaoConsultaPreco extends PanacheEntityBase {
     @JoinColumn(name = "ativo_pagamento_id", nullable = false)
     public AtivoFinanceiro ativoPagamento;
 
-    @Column(name = "quantidade_compra", nullable = false)
-    public Double quantidadeCompra;
+    @Column(name = "quantidade_pagamento", nullable = false)
+    public Double quantidadePagamento;
 
     @Column(name = "identificador_negociacao", length = 100)
     public String identificadorNegociacao;

@@ -43,7 +43,7 @@ public class ParametrizacaoConsultaPrecoService {
         parametrizacao.rede = parametrizacaoAtualizada.rede;
         parametrizacao.ativoDesejado = parametrizacaoAtualizada.ativoDesejado;
         parametrizacao.ativoPagamento = parametrizacaoAtualizada.ativoPagamento;
-        parametrizacao.quantidadeCompra = parametrizacaoAtualizada.quantidadeCompra;
+        parametrizacao.quantidadePagamento = parametrizacaoAtualizada.quantidadePagamento;
         parametrizacao.identificadorNegociacao = parametrizacaoAtualizada.identificadorNegociacao;
         parametrizacao.ativa = parametrizacaoAtualizada.ativa;
         parametrizacao.logHabilitado = parametrizacaoAtualizada.logHabilitado;

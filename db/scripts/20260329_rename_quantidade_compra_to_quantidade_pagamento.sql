@@ -1,0 +1,2 @@
+ALTER TABLE parametrizacao_consulta_preco
+RENAME COLUMN quantidade_compra TO quantidade_pagamento;

@@ -28,7 +28,7 @@ INSERT INTO ativo_financeiro (id, nome, simbolo) VALUES
 (8, 'Polygon', 'MATIC');
 
 -- Insert sample price query configurations
-INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, ativo_desejado_id, ativo_pagamento_id, quantidade_compra, identificador_negociacao, ativa, log_habilitado) VALUES
+INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, ativo_desejado_id, ativo_pagamento_id, quantidade_pagamento, identificador_negociacao, ativa, log_habilitado) VALUES
 (1, 1, 1, 1, 3, 1.0, 'BTCUSDT', true, true),
 (2, 1, 1, 2, 3, 10.0, 'ETHUSDT', true, true),
 (3, 2, 1, 1, 5, 0.5, 'BTCUSDC', true, false),
@@ -42,3 +42,10 @@ INSERT INTO historico_cotacao (id, parametrizacao_id, data_hora_consulta, cotaca
 (3, 2, CURRENT_TIMESTAMP(), 2280.30, 2274.90),
 (4, 3, CURRENT_TIMESTAMP(), 42480.00, 42440.55),
 (5, 4, CURRENT_TIMESTAMP(), 2275.80, 2270.35);
+
+ALTER TABLE usuario ALTER COLUMN id RESTART WITH 2;
+ALTER TABLE exchange ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE rede ALTER COLUMN id RESTART WITH 5;
+ALTER TABLE ativo_financeiro ALTER COLUMN id RESTART WITH 9;
+ALTER TABLE parametrizacao_consulta_preco ALTER COLUMN id RESTART WITH 6;
+ALTER TABLE historico_cotacao ALTER COLUMN id RESTART WITH 6;

@@ -12,6 +12,31 @@
       {{ alertMessage }}
     </div>
 
+    <div v-if="consultaResultado" class="glass-card result-card">
+      <div class="result-header">
+        <div>
+          <h3>Resultado da Ultima Consulta</h3>
+          <p>
+            Parametrizacao #{{ consultaResultado.parametrizacao?.id }}
+            -
+            {{ consultaResultado.parametrizacao?.ativoDesejado?.simbolo || '?' }}/{{ consultaResultado.parametrizacao?.ativoPagamento?.simbolo || '?' }}
+            via {{ consultaResultado.parametrizacao?.exchange?.nome || '-' }}
+          </p>
+        </div>
+        <span class="result-time">{{ formatDate(consultaResultado.dataHoraConsulta) }}</span>
+      </div>
+      <div class="result-grid">
+        <div class="result-metric buy">
+          <span class="metric-label">Cotacao de Compra</span>
+          <strong>{{ formatCotacao(consultaResultado.cotacaoCompra) }}</strong>
+        </div>
+        <div class="result-metric sell">
+          <span class="metric-label">Cotacao de Venda</span>
+          <strong>{{ formatCotacao(consultaResultado.cotacaoVenda) }}</strong>
+        </div>
+      </div>
+    </div>
+
     <div class="glass-card">
       <div v-if="loading" class="loading-state">
         <span class="spinner"></span> Carregando parametrizacoes...
@@ -26,7 +51,7 @@
               <th>Desejado</th>
               <th>Pagamento</th>
               <th>Identificador</th>
-              <th>Qtd. Desejada</th>
+              <th>Qtd. Pagamento</th>
               <th>Status</th>
               <th class="actions-col">Acoes</th>
             </tr>
@@ -44,7 +69,7 @@
               <td data-label="Identificador">
                 <span class="identifier-badge">{{ p.identificadorNegociacao || '-' }}</span>
               </td>
-              <td data-label="Qtd. Desejada">{{ p.quantidadeCompra }}</td>
+              <td data-label="Qtd. Pagamento">{{ p.quantidadePagamento }}</td>
               <td data-label="Status">
                 <span :class="['status-badge', p.ativa ? 'active' : 'inactive']">
                   {{ p.ativa ? 'Ativa' : 'Inativa' }}
@@ -52,6 +77,15 @@
               </td>
               <td data-label="Acoes" class="actions-col">
                 <div class="action-buttons">
+                  <button
+                    @click="consultarPreco(p)"
+                    class="icon-btn consult-btn"
+                    :disabled="consultingId === p.id"
+                    title="Consultar preco"
+                  >
+                    <svg v-if="consultingId !== p.id" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    <span v-else class="inline-spinner"></span>
+                  </button>
                   <button @click="openModal(p)" class="icon-btn edit-btn" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
@@ -107,8 +141,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Quantidade Desejada *</label>
-            <input v-model.number="form.quantidadeCompra" type="number" step="any" min="0" placeholder="Ex: 0.1" required />
+            <label>Quantidade de Pagamento *</label>
+            <input v-model.number="form.quantidadePagamento" type="number" step="any" min="0" placeholder="Ex: 100.0" required />
           </div>
           <div class="form-group">
             <label>Identificador de Negociacao *</label>
@@ -168,10 +202,12 @@ const parametrizacoes = ref([])
 const exchanges = ref([])
 const redes = ref([])
 const ativos = ref([])
+const consultaResultado = ref(null)
 
 const loading = ref(true)
 const loadingOptions = ref(false)
 const saving = ref(false)
+const consultingId = ref(null)
 const isModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const itemToDelete = ref(null)
@@ -182,7 +218,7 @@ const defaultForm = {
   redeId: '',
   ativoDesejadoId: '',
   ativoPagamentoId: '',
-  quantidadeCompra: '',
+  quantidadePagamento: '',
   identificadorNegociacao: '',
   ativa: true,
   logHabilitado: false
@@ -195,6 +231,20 @@ const showAlert = (message, type = 'info') => {
   alertMessage.value = message
   alertType.value = type
   setTimeout(() => (alertMessage.value = ''), 5000)
+}
+
+const formatCotacao = (value) => {
+  if (value == null) return '-'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 8
+  }).format(value)
+}
+
+const formatDate = (value) => {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('pt-BR')
 }
 
 const loadParametrizacoes = async () => {
@@ -237,7 +287,7 @@ const openModal = async (p = null) => {
       redeId: p.rede?.id || '',
       ativoDesejadoId: p.ativoDesejado?.id || '',
       ativoPagamentoId: p.ativoPagamento?.id || '',
-      quantidadeCompra: p.quantidadeCompra,
+      quantidadePagamento: p.quantidadePagamento,
       identificadorNegociacao: p.identificadorNegociacao || '',
       ativa: p.ativa,
       logHabilitado: p.logHabilitado
@@ -262,7 +312,7 @@ const saveParametrizacao = async () => {
       rede: { id: form.value.redeId },
       ativoDesejado: { id: form.value.ativoDesejadoId },
       ativoPagamento: { id: form.value.ativoPagamentoId },
-      quantidadeCompra: form.value.quantidadeCompra,
+      quantidadePagamento: form.value.quantidadePagamento,
       identificadorNegociacao: form.value.identificadorNegociacao,
       ativa: form.value.ativa,
       logHabilitado: form.value.logHabilitado
@@ -304,6 +354,30 @@ const executeDelete = async () => {
   } catch (error) {
     showAlert(error.message || 'Erro ao excluir.', 'error')
     closeDeleteModal()
+  }
+}
+
+const consultarPreco = async (parametrizacao) => {
+  if (!parametrizacao?.id) {
+    showAlert('A parametrizacao precisa estar salva antes da consulta.', 'error')
+    return
+  }
+
+  consultingId.value = parametrizacao.id
+  try {
+    const res = await apiFetch('/api/parametrizacoes/consultar-preco', {
+      method: 'POST',
+      body: JSON.stringify(parametrizacao)
+    })
+
+    if (res && res.error) throw new Error(res.message || 'Erro do servidor')
+
+    consultaResultado.value = res && res.data ? res.data : null
+    showAlert(`Consulta executada para a parametrizacao #${parametrizacao.id}.`, 'success')
+  } catch (error) {
+    showAlert(error.message || 'Erro ao consultar preco.', 'error')
+  } finally {
+    consultingId.value = null
   }
 }
 
@@ -423,12 +497,83 @@ onMounted(() => {
 .status-badge.active { background: #dcfce7; color: #15803d; }
 .status-badge.inactive { background: #f1f5f9; color: #64748b; }
 
-.actions-col { width: 100px; text-align: center; }
+.actions-col { width: 140px; text-align: center; }
 
 .action-buttons {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #f8fbff, #f8fffb);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.result-header h3 {
+  margin: 0 0 0.35rem;
+  color: #0f172a;
+}
+
+.result-header p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.result-time {
+  color: #1d4ed8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.result-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+}
+
+.result-metric.buy {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.result-metric.sell {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.result-metric strong {
+  font-family: 'Courier New', monospace;
+  font-size: 1.25rem;
+  color: #0f172a;
 }
 
 .icon-btn {
@@ -446,8 +591,24 @@ onMounted(() => {
 
 .edit-btn { color: #3b82f6; }
 .edit-btn:hover { background: #eff6ff; }
+.consult-btn { color: #16a34a; }
+.consult-btn:hover { background: #f0fdf4; }
 .delete-btn { color: #ef4444; }
 .delete-btn:hover { background: #fef2f2; }
+
+.icon-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.inline-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(22, 163, 74, 0.2);
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
 .primary-btn {
   display: flex;
@@ -650,5 +811,8 @@ onMounted(() => {
   .actions-col { width: 100%; justify-content: flex-end !important; }
   .form-row { flex-direction: column; gap: 1.2rem; }
   .checks-row { flex-direction: column; gap: 0.75rem; }
+  .result-header { flex-direction: column; }
+  .result-time { white-space: normal; }
+  .result-grid { grid-template-columns: 1fr; }
 }
 </style>

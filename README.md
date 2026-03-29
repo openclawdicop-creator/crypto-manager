@@ -64,7 +64,7 @@ Entidades principais:
 - `Exchange`: nome, descricao, tipo, tipoApi, tokenApi, urlApi, logHabilitado
 - `Rede`: nome, urlExplorer
 - `AtivoFinanceiro`: nome, simbolo
-- `ParametrizacaoConsultaPreco`: exchange, rede, ativoDesejado, ativoPagamento, quantidadeCompra, identificadorNegociacao, ativa, logHabilitado
+- `ParametrizacaoConsultaPreco`: exchange, rede, ativoDesejado, ativoPagamento, quantidadePagamento, identificadorNegociacao, ativa, logHabilitado
 - `HistoricoCotacao`: parametrizacao, dataHoraConsulta, cotacaoCompra, cotacaoVenda
 
 Enums:
@@ -242,7 +242,7 @@ Payload relevante de parametrizacao:
   "rede": { "id": 1 },
   "ativoDesejado": { "id": 1 },
   "ativoPagamento": { "id": 3 },
-  "quantidadeCompra": 1.0,
+  "quantidadePagamento": 1.0,
   "identificadorNegociacao": "BTCUSDT",
   "ativa": true,
   "logHabilitado": true
@@ -308,7 +308,7 @@ crypto-manager/
 ## Observacoes importantes
 
 - O banco H2 fica no arquivo `db/cryptodb.mv.db` e o schema e atualizado automaticamente pelo Hibernate.
-- Para bases ja existentes, os ajustes manuais ficam em `db/scripts/`, incluindo `20260329_add_identificador_negociacao.sql` e `20260329_rename_token_columns.sql`.
+- Para bases ja existentes, os ajustes manuais ficam em `db/scripts/`, incluindo `20260329_add_identificador_negociacao.sql`, `20260329_rename_token_columns.sql` e `20260329_rename_quantidade_compra_to_quantidade_pagamento.sql`.
 - O frontend antigo descrito no README anterior com Qute, HTMX e Alpine.js nao corresponde mais ao estado atual do projeto.
 - Nao ha testes automatizados em `src/test` no momento.
 - Existe um utilitario `GenerateKeys.java` na raiz para gerar novo par de chaves JWT em `src/main/resources`.
