@@ -5,20 +5,32 @@ export async function apiFetch(url, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
+    ...(token && token !== 'undefined' && token !== 'null' ? { Authorization: `Bearer ${token}` } : {})
   };
 
-  const response = await fetch(url, { ...options, headers });
+  // Garante que a base url correta seja usada (extraída dinamicamente do browser)
+  // Como usamos Hash History, o pathname será sempre o caminho real do app
+  const basePath = window.location.pathname;
+  const prefix = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+  
+  // Normaliza a URL. Se for ./api ou /api, lidamos corretamente
+  const cleanUrl = url.replace(/^\.?\/?/, '/');
+  const finalUrl = `${prefix}${cleanUrl}`;
+
+  console.log(`[apiFetch] Calling ${finalUrl}`);
+  console.log(`[apiFetch] Token validation: exists? ${!!token}, valid? ${token !== 'undefined' && token !== 'null'}`);
+
+  const response = await fetch(finalUrl, { ...options, headers });
   
   // Tratar Unauthorized globalmente
   if (response.status === 401) {
+    console.error(`[apiFetch] 401 Unauthorized for ${finalUrl}. Clearing local storage.`);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = `${prefix}/#/login`;
     throw new Error('Sessão expirada. Faça login novamente.');
   }
 
-  // Mesmo sendo status de falha (400, 500), tenta decodificar JSON se houver
   let data = null;
   try {
     data = await response.json();
