@@ -59,7 +59,9 @@ const handleLogin = async () => {
   errorMsg.value = ''
   
   try {
-    const response = await fetch('/api/auth/login', {
+    const basePath = window.location.pathname;
+    const prefix = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+    const response = await fetch(prefix + '/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -77,16 +79,17 @@ const handleLogin = async () => {
        return
     }
 
-    if (data.error) {
+    if (data.status === 'error' || data.error) {
       errorMsg.value = data.message || 'Usuário ou senha inválidos'
       return
     }
 
-    // Login sucessful
+    // Login successful
     localStorage.setItem('token', data.data.token)
     localStorage.setItem('user', JSON.stringify(data.data))
     
-    router.push('/dashboard')
+    console.log('Login success, redirecting to dashboard')
+    await router.push('/dashboard')
     
   } catch (error) {
     console.error('Login error:', error)
