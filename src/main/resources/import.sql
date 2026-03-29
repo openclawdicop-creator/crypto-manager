@@ -1,7 +1,7 @@
 -- Insert admin user with BCrypt hashed password (admin1234)
 -- Hash gerado com BCrypt para: admin1234
 INSERT INTO usuario (id, username, password, email, ativo) VALUES 
-(1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@cryptomanager.com', true);
+(1, 'admin', '$2a$10$MpgOWXjDvQ5aoyPWDa5Ls.4mQUDlUs7y1Nba1Tf1wC9E8PiWU2YTW', 'admin@cryptomanager.com', true);
 
 -- Insert sample exchanges
 INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, token_api, url_api, log_habilitado) VALUES

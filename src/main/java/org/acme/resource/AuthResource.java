@@ -1,5 +1,6 @@
 package org.acme.resource;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -88,12 +89,14 @@ public class AuthResource {
 
     @POST
     @Path("/logout")
+    @RolesAllowed("user")
     public ApiResponse<Void> logout() {
         return ApiResponse.success("Logout realizado com sucesso", null);
     }
 
     @GET
     @Path("/me")
+    @RolesAllowed("user")
     public ApiResponse<Map<String, Object>> getMe(@Context SecurityContext securityContext) {
         try {
             String username = securityContext.getUserPrincipal().getName();
