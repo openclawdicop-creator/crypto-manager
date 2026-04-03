@@ -1,6 +1,49 @@
 <template>
   <div class="dashboard-container">
 
+    <!-- Price Variation Charts Section -->
+    <div class="charts-section">
+      <div class="section-header">
+        <h3>📈 Variação de Preço - Últimas 6 Horas</h3>
+        <button @click="carregarGraficos" class="refresh-btn" title="Recarregar gráficos">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+      
+      <div v-if="loadingCharts" class="loading-state">
+        <span class="spinner"></span> Carregando gráficos...
+      </div>
+      
+      <div v-else-if="parametrizacoesAtivas.length === 0" class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+             stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <p>Nenhuma parametrização ativa com dados nas últimas 6 horas.</p>
+      </div>
+      
+      <div v-else class="charts-grid">
+        <div v-for="param in parametrizacoesAtivas" :key="param.id" class="chart-card glass-card">
+          <div class="chart-header">
+            <h4>{{ param.nome }}</h4>
+            <div class="chart-legend">
+              <span class="legend-item">
+                <span class="legend-color buy"></span>
+                Compra
+              </span>
+              <span class="legend-item">
+                <span class="legend-color sell"></span>
+                Venda
+              </span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas :id="`chart-${param.id}`"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div v-for="stat in stats" :key="stat.label" class="stat-card glass-card">
@@ -109,15 +152,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { apiFetch } from '../utils/api.js'
+import { Chart, registerables } from 'chart.js'
+
+Chart.register(...registerables)
 
 const loading = ref(true)
+const loadingCharts = ref(true)
 const ativos = ref([])
 const exchanges = ref([])
+const proxies = ref([])
 const redes = ref([])
 const parametrizacoes = ref([])
 const historicos = ref([])
+const parametrizacoesAtivas = ref([])
+const chartInstances = ref({})
 
 const sortedHistoricos = computed(() =>
   [...historicos.value].sort((a, b) => new Date(b.dataHoraConsulta) - new Date(a.dataHoraConsulta))
@@ -138,6 +188,12 @@ const stats = computed(() => [
     value: exchanges.value.length,
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
     color: 'linear-gradient(135deg, #0ea5e9, #2563eb)'
+  },
+  {
+    label: 'Proxies Cadastrados',
+    value: proxies.value.length,
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    color: 'linear-gradient(135deg, #64748b, #334155)'
   },
   {
     label: 'Redes Cadastradas',
@@ -175,20 +231,200 @@ const formatDate = (dt) => {
 
 const safe = (fn) => fn().catch(() => ({ data: [] }))
 
+const destruirGraficos = () => {
+  Object.values(chartInstances.value).forEach(chart => {
+    if (chart) chart.destroy()
+  })
+  chartInstances.value = {}
+}
+
+const carregarGraficos = async () => {
+  loadingCharts.value = true
+  try {
+    console.log('Carregando gráficos do dashboard...')
+    const res = await apiFetch('/api/dashboard/variacao-preco/todos')
+    console.log('Resposta da API:', res)
+
+    destruirGraficos()
+
+    if (res && res.data) {
+      // Converte objeto em array e filtra apenas com dados
+      const dados = Object.values(res.data).filter(p => p.dados && Array.isArray(p.dados) && p.dados.length > 0)
+      console.log('Parametrizações com dados:', dados.length, dados)
+      parametrizacoesAtivas.value = dados
+
+      // Libera a renderização dos canvases antes de criar os gráficos
+      loadingCharts.value = false
+      await nextTick()
+
+      // Cria novos gráficos somente depois que os canvases existirem no DOM
+      dados.forEach(param => {
+        console.log('Criando gráfico para:', param.nome)
+        criarGrafico(param)
+      })
+      return
+    }
+
+    console.warn('Nenhum dado retornado pela API')
+    parametrizacoesAtivas.value = []
+  } catch (error) {
+    console.error('Erro ao carregar gráficos:', error)
+    parametrizacoesAtivas.value = []
+  } finally {
+    loadingCharts.value = false
+  }
+}
+
+const parseDataHora = (dataHora) => {
+  if (typeof dataHora === 'string') {
+    return new Date(dataHora)
+  }
+
+  if (Array.isArray(dataHora)) {
+    // Formato [ano, mes, dia, hora, minuto, segundo, nanos]
+    return new Date(dataHora[0], dataHora[1] - 1, dataHora[2], dataHora[3], dataHora[4], dataHora[5])
+  }
+
+  return new Date()
+}
+
+const criarGrafico = (param) => {
+  console.log('Criando gráfico para param:', param.id, param.nome)
+  const canvas = document.getElementById(`chart-${param.id}`)
+  if (!canvas) {
+    console.error('Canvas não encontrado:', `chart-${param.id}`)
+    return
+  }
+  
+  console.log('Canvas encontrado, dimensões:', canvas.offsetWidth, canvas.offsetHeight)
+  const ctx = canvas.getContext('2d')
+
+  const limiteTempo = Date.now() - (6 * 60 * 60 * 1000)
+  const dadosUltimasSeisHoras = param.dados.filter(d => parseDataHora(d.dataHora).getTime() >= limiteTempo)
+
+  if (dadosUltimasSeisHoras.length === 0) {
+    console.warn('Sem dados nas últimas 6 horas para:', param.nome)
+    return
+  }
+  
+  // Prepara dados
+  console.log('Primeiro dado:', dadosUltimasSeisHoras[0])
+  const labels = dadosUltimasSeisHoras.map(d => {
+    const dateObj = parseDataHora(d.dataHora)
+    return dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  })
+  
+  // BigDecimal do Java pode vir como numero ou string
+  const dadosCompra = dadosUltimasSeisHoras.map(d => {
+    return typeof d.precoCompra === 'string' ? parseFloat(d.precoCompra) : d.precoCompra
+  })
+  const dadosVenda = dadosUltimasSeisHoras.map(d => {
+    return typeof d.precoVenda === 'string' ? parseFloat(d.precoVenda) : d.precoVenda
+  })
+  
+  console.log('Dados preparados:', labels.length, 'pontos')
+  
+  // Cria gráfico
+  console.log('Criando instância do Chart...')
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Compra',
+          data: dadosCompra,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 2,
+          pointHoverRadius: 4
+        },
+        {
+          label: 'Venda',
+          data: dadosVenda,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220, 38, 38, 0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 2,
+          pointHoverRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const label = context.dataset.label || ''
+              const value = context.parsed.y
+              return `${label}: ${new Intl.NumberFormat('pt-BR', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 8 }).format(value)}`
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45,
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: (value) => new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 2 }).format(value)
+          }
+        }
+      }
+    }
+  })
+  
+  console.log('Gráfico criado com sucesso:', chart.id)
+  chartInstances.value[param.id] = chart
+}
+
 onMounted(async () => {
   try {
-    const [r1, r2, r3, r4, r5] = await Promise.all([
+    const [r1, r2, r3, r4, r5, r6] = await Promise.all([
       safe(() => apiFetch('/api/ativos')),
       safe(() => apiFetch('/api/exchanges')),
+      safe(() => apiFetch('/api/proxies')),
       safe(() => apiFetch('/api/redes')),
       safe(() => apiFetch('/api/parametrizacoes')),
       safe(() => apiFetch('/api/historicos'))
     ])
     ativos.value = r1?.data ?? []
     exchanges.value = r2?.data ?? []
-    redes.value = r3?.data ?? []
-    parametrizacoes.value = r4?.data ?? []
-    historicos.value = r5?.data ?? []
+    proxies.value = r3?.data ?? []
+    redes.value = r4?.data ?? []
+    parametrizacoes.value = r5?.data ?? []
+    historicos.value = r6?.data ?? []
+    
+    // Carrega gráficos
+    await carregarGraficos()
+    
+    // Atualiza gráficos a cada 2 minutos
+    setInterval(carregarGraficos, 120000)
   } finally {
     loading.value = false
   }
@@ -521,5 +757,154 @@ onMounted(async () => {
 
 @media (max-width: 400px) {
   .stats-grid { grid-template-columns: 1fr; }
+}
+
+/* Charts Section Styles */
+.charts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.charts-section .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.charts-section .section-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.refresh-btn:active {
+  transform: rotate(90deg);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-card {
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chart-header h4 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-color.buy {
+  background: #2563eb;
+}
+
+.legend-color.sell {
+  background: #dc2626;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart-container canvas {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+  
+  .charts-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 </style>
