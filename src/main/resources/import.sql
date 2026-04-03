@@ -28,6 +28,14 @@ INSERT INTO ativo_financeiro (id, nome, simbolo) VALUES
 (7, 'Solana', 'SOL'),
 (8, 'Polygon', 'MATIC');
 
+-- Insert sample asset network settings
+INSERT INTO ativo_financeiro_rede (id, ativo_financeiro_id, rede_id, identificador, quantidade_casas_decimais) VALUES
+(1, 1, 2, 'BTC', 8),
+(2, 2, 1, 'ETH', 18),
+(3, 3, 1, 'USDT', 6),
+(4, 3, 3, 'USDT', 18),
+(5, 4, 3, 'BNB', 18);
+
 -- Insert sample price query configurations
 INSERT INTO parametrizacao_consulta_preco (id, exchange_id, rede_id, ativo_desejado_id, ativo_pagamento_id, quantidade_pagamento, identificador_negociacao, ativa, log_habilitado) VALUES
 (1, 1, 1, 1, 3, 1.0, 'BTCUSDT', true, true),
@@ -54,6 +62,7 @@ ALTER TABLE usuario ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE exchange ALTER COLUMN id RESTART WITH 5;
 ALTER TABLE rede ALTER COLUMN id RESTART WITH 5;
 ALTER TABLE ativo_financeiro ALTER COLUMN id RESTART WITH 9;
+ALTER TABLE ativo_financeiro_rede ALTER COLUMN id RESTART WITH 6;
 ALTER TABLE parametrizacao_consulta_preco ALTER COLUMN id RESTART WITH 6;
 ALTER TABLE historico_cotacao ALTER COLUMN id RESTART WITH 6;
 ALTER TABLE proxy ALTER COLUMN id RESTART WITH 4;

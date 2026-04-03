@@ -28,6 +28,7 @@ public class DatabaseIdentitySyncService {
     void onStart(@Observes StartupEvent event) {
         garantirColunaCategoriaExchange();
         garantirColunaProfundidadeLivroOfertas();
+        garantirColunaQuantidadeCasasDecimaisAtivoFinanceiroRede();
 
         for (String table : IDENTITY_TABLES) {
             Number nextId = (Number) entityManager
@@ -73,6 +74,24 @@ public class DatabaseIdentitySyncService {
 
         entityManager
                 .createNativeQuery("ALTER TABLE exchange ALTER COLUMN profundidade_livro_ofertas SET NOT NULL")
+                .executeUpdate();
+    }
+
+    private void garantirColunaQuantidadeCasasDecimaisAtivoFinanceiroRede() {
+        entityManager
+                .createNativeQuery("ALTER TABLE ativo_financeiro_rede ADD COLUMN IF NOT EXISTS quantidade_casas_decimais INTEGER DEFAULT 6")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("UPDATE ativo_financeiro_rede SET quantidade_casas_decimais = 6 WHERE quantidade_casas_decimais IS NULL OR quantidade_casas_decimais < 0")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE ativo_financeiro_rede ALTER COLUMN quantidade_casas_decimais SET DEFAULT 6")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE ativo_financeiro_rede ALTER COLUMN quantidade_casas_decimais SET NOT NULL")
                 .executeUpdate();
     }
 }

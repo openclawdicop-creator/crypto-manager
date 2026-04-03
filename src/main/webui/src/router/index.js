@@ -31,6 +31,12 @@ const router = createRouter({
           component: () => import('../views/AtivosView.vue')
         },
         {
+          path: 'ativos-redes',
+          name: 'ativos-redes',
+          component: () => import('../views/AtivosRedesView.vue'),
+          meta: { title: 'Configuracao Ativo Rede' }
+        },
+        {
           path: 'exchanges',
           name: 'exchanges',
           component: () => import('../views/ExchangesView.vue')
