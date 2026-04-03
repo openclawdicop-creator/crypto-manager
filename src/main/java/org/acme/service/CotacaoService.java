@@ -8,6 +8,7 @@ import org.acme.entity.ParametrizacaoConsultaPreco;
 import org.acme.repository.HistoricoCotacaoRepository;
 import org.acme.repository.ParametrizacaoConsultaPrecoRepository;
 import org.acme.ws.BinanceClient;
+import org.acme.ws.BybitClient;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +24,9 @@ public class CotacaoService {
     @Inject
     BinanceClient binanceClient;
 
+    @Inject
+    BybitClient bybitClient;
+
     @Transactional
     public HistoricoCotacao processarConsulta(ParametrizacaoConsultaPreco parametrizacaoRecebida) {
         if (parametrizacaoRecebida == null || parametrizacaoRecebida.id == null) {
@@ -36,7 +40,7 @@ public class CotacaoService {
             throw new IllegalArgumentException("Parametrizacao nao encontrada para o ID informado.");
         }
 
-        BinanceClient.ResultadoCotacao resultado = binanceClient.consultarPreco(parametrizacaoPersistida);
+        BinanceClient.ResultadoCotacao resultado = consultarPrecoNaExchange(parametrizacaoPersistida);
 
         HistoricoCotacao historicoCotacao = new HistoricoCotacao();
         historicoCotacao.parametrizacao = parametrizacaoPersistida;
@@ -46,5 +50,21 @@ public class CotacaoService {
 
         historicoCotacaoRepository.persist(historicoCotacao);
         return historicoCotacao;
+    }
+
+    private BinanceClient.ResultadoCotacao consultarPrecoNaExchange(ParametrizacaoConsultaPreco parametrizacaoPersistida) {
+        String nomeExchange = parametrizacaoPersistida.exchange != null && parametrizacaoPersistida.exchange.nome != null
+                ? parametrizacaoPersistida.exchange.nome.trim()
+                : "";
+
+        if ("bybit".equalsIgnoreCase(nomeExchange)) {
+            return bybitClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if ("binance".equalsIgnoreCase(nomeExchange)) {
+            return binanceClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        throw new IllegalArgumentException("Exchange nao suportada para consulta de cotacao: " + nomeExchange);
     }
 }
