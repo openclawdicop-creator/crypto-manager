@@ -4,10 +4,10 @@ INSERT INTO usuario (id, username, password, email, ativo) VALUES
 (1, 'admin', '$2a$10$MpgOWXjDvQ5aoyPWDa5Ls.4mQUDlUs7y1Nba1Tf1wC9E8PiWU2YTW', 'admin@cryptomanager.com', true);
 
 -- Insert sample exchanges
-INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, token_api, url_api, profundidade_livro_ofertas, log_habilitado, usar_proxy) VALUES
-(1, 'Binance', 'Maior exchange de criptomoedas do mundo', 'CENTRALIZADA', 'REST', 'binance_api_token_123', 'https://api.binance.com', 10, true, false),
-(2, 'Coinbase', 'Exchange americana de criptomoedas', 'CENTRALIZADA', 'REST', 'coinbase_api_token_456', 'https://api.coinbase.com', 10, true, false),
-(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'uniswap_api_token_789', 'https://api.uniswap.org', 10, false, false);
+INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, categoria, token_api, url_api, profundidade_livro_ofertas, log_habilitado, usar_proxy) VALUES
+(1, 'Binance', 'Maior exchange de criptomoedas do mundo', 'CENTRALIZADA', 'REST', 'SPOT', 'binance_api_token_123', 'https://api.binance.com', 10, true, false),
+(2, 'Coinbase', 'Exchange americana de criptomoedas', 'CENTRALIZADA', 'REST', 'SPOT', 'coinbase_api_token_456', 'https://api.coinbase.com', 10, true, false),
+(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'SPOT', 'uniswap_api_token_789', 'https://api.uniswap.org', 10, false, false);
 
 -- Insert sample networks
 INSERT INTO rede (id, nome, url_explorer) VALUES

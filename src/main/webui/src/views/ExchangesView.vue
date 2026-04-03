@@ -32,6 +32,7 @@
               <th>Nome</th>
               <th>Tipo</th>
               <th>Tipo API</th>
+              <th>Categoria</th>
               <th>Profundidade</th>
               <th>Proxy</th>
               <th class="actions-col">Ações</th>
@@ -39,13 +40,18 @@
           </thead>
           <tbody>
             <tr v-if="exchanges.length === 0">
-              <td colspan="7" class="empty-state">Nenhuma exchange cadastrada. Clique em "Nova Exchange" para adicionar.</td>
+              <td colspan="8" class="empty-state">Nenhuma exchange cadastrada. Clique em "Nova Exchange" para adicionar.</td>
             </tr>
             <tr v-for="exchange in exchanges" :key="exchange.id">
               <td data-label="ID"><strong>#{{ exchange.id }}</strong></td>
               <td data-label="Nome">{{ exchange.nome }}</td>
               <td data-label="Tipo">{{ exchange.tipo }}</td>
               <td data-label="Tipo API"><span :class="['api-badge', exchange.tipoApi]">{{ exchange.tipoApi }}</span></td>
+              <td data-label="Categoria">
+                <span :class="['category-badge', exchange.categoria || 'SPOT']">
+                  {{ formatCategoria(exchange.categoria) }}
+                </span>
+              </td>
               <td data-label="Profundidade">
                 <span class="depth-badge">{{ exchange.profundidadeLivroOfertas || 10 }}</span>
               </td>
@@ -102,6 +108,14 @@
               <select v-model="form.tipoApi" required>
                 <option value="REST">REST</option>
                 <option value="WEBSOCKET">WebSocket</option>
+              </select>
+            </div>
+
+            <div class="form-group half-width">
+              <label>Categoria *</label>
+              <select v-model="form.categoria" required>
+                <option value="SPOT">Spot</option>
+                <option value="FUTURO">Futuro</option>
               </select>
             </div>
           </div>
@@ -187,6 +201,7 @@ const defaultForm = {
   descricao: '',
   tipo: 'CENTRALIZADA',
   tipoApi: 'REST',
+  categoria: 'SPOT',
   urlApi: '',
   profundidadeLivroOfertas: 10,
   tokenApi: '',
@@ -202,6 +217,11 @@ const showAlert = (message, type = 'info') => {
   alertMessage.value = message
   alertType.value = type
   setTimeout(() => alertMessage.value = '', 5000)
+}
+
+const formatCategoria = (categoria) => {
+  if (categoria === 'FUTURO') return 'Futuro'
+  return 'Spot'
 }
 
 const loadExchanges = async () => {
@@ -229,6 +249,7 @@ const openModal = (exchange = null) => {
       descricao: exchange.descricao || '',
       tipo: exchange.tipo || 'CENTRALIZADA',
       tipoApi: exchange.tipoApi || 'REST',
+      categoria: exchange.categoria || 'SPOT',
       urlApi: exchange.urlApi || '',
       profundidadeLivroOfertas: exchange.profundidadeLivroOfertas || 10,
       tokenApi: exchange.tokenApi || '',
@@ -407,6 +428,19 @@ onMounted(() => {
 }
 .api-badge.REST { background: #dcfce7; color: #15803d; }
 .api-badge.WEBSOCKET { background: #e0e7ff; color: #4338ca; }
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.category-badge.SPOT { background: #dbeafe; color: #1d4ed8; }
+.category-badge.FUTURO { background: #fee2e2; color: #b91c1c; }
 
 .depth-badge {
   display: inline-flex;

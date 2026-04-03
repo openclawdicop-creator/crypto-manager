@@ -9,6 +9,7 @@ import org.acme.repository.HistoricoCotacaoRepository;
 import org.acme.repository.ParametrizacaoConsultaPrecoRepository;
 import org.acme.ws.BinanceClient;
 import org.acme.ws.BybitClient;
+import org.acme.ws.ResultadoCotacao;
 
 import java.time.LocalDateTime;
 
@@ -40,7 +41,7 @@ public class CotacaoService {
             throw new IllegalArgumentException("Parametrizacao nao encontrada para o ID informado.");
         }
 
-        BinanceClient.ResultadoCotacao resultado = consultarPrecoNaExchange(parametrizacaoPersistida);
+        ResultadoCotacao resultado = consultarPrecoNaExchange(parametrizacaoPersistida);
 
         HistoricoCotacao historicoCotacao = new HistoricoCotacao();
         historicoCotacao.parametrizacao = parametrizacaoPersistida;
@@ -52,7 +53,7 @@ public class CotacaoService {
         return historicoCotacao;
     }
 
-    private BinanceClient.ResultadoCotacao consultarPrecoNaExchange(ParametrizacaoConsultaPreco parametrizacaoPersistida) {
+    private ResultadoCotacao consultarPrecoNaExchange(ParametrizacaoConsultaPreco parametrizacaoPersistida) {
         String nomeExchange = parametrizacaoPersistida.exchange != null && parametrizacaoPersistida.exchange.nome != null
                 ? parametrizacaoPersistida.exchange.nome.trim()
                 : "";

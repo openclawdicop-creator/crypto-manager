@@ -26,6 +26,7 @@ public class DatabaseIdentitySyncService {
 
     @Transactional
     void onStart(@Observes StartupEvent event) {
+        garantirColunaCategoriaExchange();
         garantirColunaProfundidadeLivroOfertas();
 
         for (String table : IDENTITY_TABLES) {
@@ -37,6 +38,24 @@ public class DatabaseIdentitySyncService {
                     .createNativeQuery("ALTER TABLE " + table + " ALTER COLUMN id RESTART WITH " + nextId.longValue())
                     .executeUpdate();
         }
+    }
+
+    private void garantirColunaCategoriaExchange() {
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ADD COLUMN IF NOT EXISTS categoria VARCHAR(20) DEFAULT 'SPOT'")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("UPDATE exchange SET categoria = 'SPOT' WHERE categoria IS NULL OR categoria NOT IN ('SPOT', 'FUTURO')")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ALTER COLUMN categoria SET DEFAULT 'SPOT'")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ALTER COLUMN categoria SET NOT NULL")
+                .executeUpdate();
     }
 
     private void garantirColunaProfundidadeLivroOfertas() {

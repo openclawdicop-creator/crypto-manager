@@ -3,6 +3,7 @@ package org.acme.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.acme.entity.CategoriaExchange;
 import org.acme.entity.Exchange;
 import org.acme.repository.ExchangeRepository;
 
@@ -27,6 +28,7 @@ public class ExchangeService {
 
     @Transactional
     public Exchange criar(Exchange exchange) {
+        exchange.categoria = normalizarCategoria(exchange.categoria);
         exchange.profundidadeLivroOfertas = normalizarProfundidadeLivroOfertas(exchange.profundidadeLivroOfertas);
         exchangeRepository.persist(exchange);
         return exchange;
@@ -42,6 +44,7 @@ public class ExchangeService {
         exchange.descricao = exchangeAtualizado.descricao;
         exchange.tipo = exchangeAtualizado.tipo;
         exchange.tipoApi = exchangeAtualizado.tipoApi;
+        exchange.categoria = normalizarCategoria(exchangeAtualizado.categoria);
         exchange.tokenApi = exchangeAtualizado.tokenApi;
         exchange.urlApi = exchangeAtualizado.urlApi;
         exchange.profundidadeLivroOfertas = normalizarProfundidadeLivroOfertas(exchangeAtualizado.profundidadeLivroOfertas);
@@ -54,6 +57,10 @@ public class ExchangeService {
     @Transactional
     public void excluir(Long id) {
         exchangeRepository.deleteById(id);
+    }
+
+    private CategoriaExchange normalizarCategoria(CategoriaExchange categoria) {
+        return categoria != null ? categoria : CategoriaExchange.SPOT;
     }
 
     private Integer normalizarProfundidadeLivroOfertas(Integer profundidadeLivroOfertas) {

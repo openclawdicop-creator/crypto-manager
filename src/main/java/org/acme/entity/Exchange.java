@@ -25,6 +25,10 @@ public class Exchange extends PanacheEntityBase {
     @Column(name = "tipo_api", nullable = false)
     public TipoApi tipoApi;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    public CategoriaExchange categoria = CategoriaExchange.SPOT;
+
     @Column(name = "token_api", length = 500)
     public String tokenApi;
 
