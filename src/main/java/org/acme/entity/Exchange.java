@@ -33,4 +33,7 @@ public class Exchange extends PanacheEntityBase {
 
     @Column(name = "log_habilitado")
     public boolean logHabilitado;
+
+    @Column(name = "usar_proxy")
+    public Boolean usarProxy = false;
 }

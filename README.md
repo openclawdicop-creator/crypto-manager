@@ -16,8 +16,9 @@ Aplicacao web para gerenciamento de ativos, exchanges, redes, parametrizacoes de
 - Login com emissao de token JWT
 - Dashboard com contadores e ultimas cotacoes registradas
 - CRUD de ativos financeiros
-- CRUD de exchanges
+- CRUD de exchanges (suporte a Proxy e Log de diagnóstico)
 - CRUD de redes
+- CRUD de proxies
 - CRUD de parametrizacoes de consulta de preco
 - Consulta e exclusao de historicos de cotacao
 - API de usuarios disponivel no backend, sem tela dedicada no frontend
@@ -61,9 +62,10 @@ Principais modulos:
 Entidades principais:
 
 - `Usuario`: username, password, email, ativo
-- `Exchange`: nome, descricao, tipo, tipoApi, tokenApi, urlApi, logHabilitado
+- `Exchange`: nome, descricao, tipo, tipoApi, tokenApi, urlApi, logHabilitado, usarProxy
 - `Rede`: nome, urlExplorer
 - `AtivoFinanceiro`: nome, simbolo
+- `Proxy`: nome, url, usuario, senha, token, porta
 - `ParametrizacaoConsultaPreco`: exchange, rede, ativoDesejado, ativoPagamento, quantidadePagamento, identificadorNegociacao, ativa, logHabilitado
 - `HistoricoCotacao`: parametrizacao, dataHoraConsulta, cotacaoCompra, cotacaoVenda
 
@@ -87,6 +89,7 @@ Carga inicial incluida:
 - 3 exchanges
 - 4 redes
 - 8 ativos financeiros
+- 3 proxies
 - 5 parametrizacoes
 - 5 registros de historico
 
@@ -225,6 +228,14 @@ Observacao: `reset-admin` e `check-admin` nao exigem autenticacao no estado atua
 - `PUT /api/redes/{id}`
 - `DELETE /api/redes/{id}`
 
+### Proxies
+
+- `GET /api/proxies`
+- `GET /api/proxies/{id}`
+- `POST /api/proxies`
+- `PUT /api/proxies/{id}`
+- `DELETE /api/proxies/{id}`
+
 ### Parametrizacoes
 
 - `GET /api/parametrizacoes`
@@ -265,6 +276,7 @@ Rotas da SPA:
 - `/dashboard`
 - `/ativos`
 - `/exchanges`
+- `/proxies`
 - `/redes`
 - `/parametrizacoes`
 - `/historicos`
@@ -309,6 +321,6 @@ crypto-manager/
 
 - O banco H2 fica no arquivo `db/cryptodb.mv.db` e o schema e atualizado automaticamente pelo Hibernate.
 - Para bases ja existentes, os ajustes manuais ficam em `db/scripts/`, incluindo `20260329_add_identificador_negociacao.sql`, `20260329_rename_token_columns.sql` e `20260329_rename_quantidade_compra_to_quantidade_pagamento.sql`.
-- O frontend antigo descrito no README anterior com Qute, HTMX e Alpine.js nao corresponde mais ao estado atual do projeto.
+- O frontend antigo descrito no README anterior com Qute, HTMX e Alpine.js nao corresponde mais ao estado atual do codigo.
 - Nao ha testes automatizados em `src/test` no momento.
 - Existe um utilitario `GenerateKeys.java` na raiz para gerar novo par de chaves JWT em `src/main/resources`.

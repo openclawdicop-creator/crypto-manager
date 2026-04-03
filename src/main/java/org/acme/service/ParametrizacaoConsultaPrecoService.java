@@ -55,4 +55,24 @@ public class ParametrizacaoConsultaPrecoService {
     public void excluir(Long id) {
         parametrizacaoConsultaPrecoRepository.deleteById(id);
     }
+
+    @Transactional
+    public List<ParametrizacaoConsultaPreco> ativarTodas() {
+        List<ParametrizacaoConsultaPreco> parametrizacoes = listarTodos();
+        for (ParametrizacaoConsultaPreco p : parametrizacoes) {
+            p.ativa = true;
+            parametrizacaoConsultaPrecoRepository.persist(p);
+        }
+        return parametrizacoes;
+    }
+
+    @Transactional
+    public List<ParametrizacaoConsultaPreco> desativarTodas() {
+        List<ParametrizacaoConsultaPreco> parametrizacoes = listarTodos();
+        for (ParametrizacaoConsultaPreco p : parametrizacoes) {
+            p.ativa = false;
+            parametrizacaoConsultaPrecoRepository.persist(p);
+        }
+        return parametrizacoes;
+    }
 }

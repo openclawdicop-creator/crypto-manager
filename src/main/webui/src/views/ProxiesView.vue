@@ -1,10 +1,10 @@
 <template>
-  <div class="redes-container">
+  <div class="proxies-container">
     <div class="header-actions">
-      <h2>Gerenciamento de Redes</h2>
+      <h2>Gerenciamento de Proxies</h2>
       <button @click="openModal()" class="primary-btn">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Nova Rede
+        Novo Proxy
       </button>
     </div>
 
@@ -21,7 +21,7 @@
 
     <div class="glass-card">
       <div v-if="loading" class="loading-state">
-        <span class="spinner"></span> Carregando redes...
+        <span class="spinner"></span> Carregando proxies...
       </div>
       
       <div class="table-responsive" v-else>
@@ -29,30 +29,29 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nome da Rede</th>
-              <th>URL do Explorer</th>
+              <th>Nome</th>
+              <th>URL</th>
+              <th>Porta</th>
+              <th>Usuário</th>
               <th class="actions-col">Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="redes.length === 0">
-              <td colspan="4" class="empty-state">Nenhuma rede cadastrada. Clique em "Nova Rede" para adicionar.</td>
+            <tr v-if="proxies.length === 0">
+              <td colspan="5" class="empty-state">Nenhum proxy cadastrado. Clique em "Novo Proxy" para adicionar.</td>
             </tr>
-            <tr v-for="rede in redes" :key="rede.id">
-              <td data-label="ID"><strong>#{{ rede.id }}</strong></td>
-              <td data-label="Nome da Rede">{{ rede.nome }}</td>
-              <td data-label="URL do Explorer">
-                <a :href="rede.urlExplorer" target="_blank" v-if="rede.urlExplorer" class="explorer-link">
-                  {{ rede.urlExplorer }}
-                </a>
-                <span v-else class="text-muted">-</span>
-              </td>
+            <tr v-for="proxy in proxies" :key="proxy.id">
+              <td data-label="ID"><strong>#{{ proxy.id }}</strong></td>
+              <td data-label="Nome">{{ proxy.nome }}</td>
+              <td data-label="URL">{{ proxy.url }}</td>
+              <td data-label="Porta">{{ proxy.porta || '-' }}</td>
+              <td data-label="Usuário">{{ proxy.usuario || '-' }}</td>
               <td data-label="Ações" class="actions-col">
                 <div class="action-buttons">
-                  <button @click="openModal(rede)" class="icon-btn edit-btn" title="Editar">
+                  <button @click="openModal(proxy)" class="icon-btn edit-btn" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
-                  <button @click="confirmDelete(rede)" class="icon-btn delete-btn" title="Excluir">
+                  <button @click="confirmDelete(proxy)" class="icon-btn delete-btn" title="Excluir">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
                 </div>
@@ -67,23 +66,46 @@
     <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3>{{ editingId ? 'Editar Rede' : 'Nova Rede' }}</h3>
+          <h3>{{ editingId ? 'Editar Proxy' : 'Novo Proxy' }}</h3>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
-        <form @submit.prevent="saveRede" class="modern-form">
+        <form @submit.prevent="saveProxy" class="modern-form">
           <div class="form-group">
-            <label>Nome da Rede *</label>
-            <input v-model="form.nome" type="text" placeholder="Ex: Ethereum Mainnet" required maxlength="100"/>
-          </div>
-          <div class="form-group">
-            <label>URL do Block Explorer</label>
-            <input v-model="form.urlExplorer" type="url" placeholder="Ex: https://etherscan.io" maxlength="200"/>
+            <label>Nome *</label>
+            <input v-model="form.nome" type="text" placeholder="Ex: Proxy Principal" required maxlength="100"/>
           </div>
           
+          <div class="form-group">
+            <label>URL *</label>
+            <input v-model="form.url" type="text" placeholder="Ex: http://proxy.example.com:8080" required maxlength="500"/>
+          </div>
+
+          <div class="form-group">
+            <label>Porta</label>
+            <input v-model.number="form.porta" type="number" placeholder="Ex: 8080" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Usuário</label>
+              <input v-model="form.usuario" type="text" placeholder="Usuário (opcional)" maxlength="100"/>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Senha</label>
+              <input v-model="form.senha" type="password" placeholder="Senha (opcional)" maxlength="100"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Token</label>
+            <input v-model="form.token" type="password" placeholder="Token de Autenticação (opcional)" maxlength="500"/>
+          </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
             <button type="submit" class="btn primary-btn" :disabled="saving">
-              {{ saving ? 'Salvando...' : 'Salvar Rede' }}
+              {{ saving ? 'Salvando...' : 'Salvar Proxy' }}
             </button>
           </div>
         </form>
@@ -98,7 +120,7 @@
           <button @click="closeDeleteModal" class="close-btn">&times;</button>
         </div>
         <div style="margin-bottom: 1.5rem; color: #334155;">
-          Tem certeza que deseja excluir a rede <strong>"{{ itemToDelete?.nome }}"</strong>?
+          Tem certeza que deseja excluir o proxy <strong>"{{ itemToDelete?.nome }}"</strong>?
           <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Esta ação não poderá ser desfeita.</p>
         </div>
         <div class="modal-footer">
@@ -114,7 +136,7 @@
 import { ref, onMounted } from 'vue'
 import { apiFetch } from '../utils/api.js'
 
-const redes = ref([])
+const proxies = ref([])
 const loading = ref(true)
 const saving = ref(false)
 
@@ -122,7 +144,16 @@ const isModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const itemToDelete = ref(null)
 const editingId = ref(null)
-const form = ref({ nome: '', urlExplorer: '' })
+
+const defaultForm = {
+  nome: '',
+  url: '',
+  porta: null,
+  usuario: '',
+  senha: '',
+  token: ''
+}
+const form = ref({ ...defaultForm })
 
 const alertMessage = ref('')
 const alertType = ref('info')
@@ -133,30 +164,37 @@ const showAlert = (message, type = 'info') => {
   setTimeout(() => alertMessage.value = '', 5000)
 }
 
-const loadRedes = async () => {
+const loadProxies = async () => {
   loading.value = true
   try {
-    const res = await apiFetch('/api/redes')
+    const res = await apiFetch('/api/proxies')
     if (res && res.data) {
-      redes.value = res.data
+      proxies.value = res.data
     } else {
-      redes.value = []
+      proxies.value = []
     }
   } catch (error) {
-    showAlert(error.message || 'Erro ao carregar redes', 'error')
+    showAlert(error.message || 'Erro ao carregar proxies', 'error')
   } finally {
     loading.value = false
   }
 }
 
-const openModal = (rede = null) => {
+const openModal = (proxy = null) => {
   alertMessage.value = ''
-  if (rede) {
-    editingId.value = rede.id
-    form.value = { nome: rede.nome, urlExplorer: rede.urlExplorer || '' }
+  if (proxy) {
+    editingId.value = proxy.id
+    form.value = {
+      nome: proxy.nome,
+      url: proxy.url,
+      porta: proxy.porta || null,
+      usuario: proxy.usuario || '',
+      senha: proxy.senha || '',
+      token: proxy.token || ''
+    }
   } else {
     editingId.value = null
-    form.value = { nome: '', urlExplorer: '' }
+    form.value = { ...defaultForm }
   }
   isModalOpen.value = true
 }
@@ -166,15 +204,15 @@ const closeModal = () => {
   editingId.value = null
 }
 
-const saveRede = async () => {
+const saveProxy = async () => {
   saving.value = true
   alertMessage.value = ''
   try {
-    let url = '/api/redes'
+    let url = '/api/proxies'
     let method = 'POST'
     
     if (editingId.value) {
-      url = `/api/redes/${editingId.value}`
+      url = `/api/proxies/${editingId.value}`
       method = 'PUT'
     }
 
@@ -183,24 +221,23 @@ const saveRede = async () => {
       body: JSON.stringify(form.value)
     })
     
-    // Tratando formato do ApiResponse do backend onde (error = true/false)
     if (res && res.error) {
       throw new Error(res.message || 'Erro do servidor')
     }
 
-    showAlert(editingId.value ? 'Rede atualizada com sucesso!' : 'Rede criada com sucesso!', 'success')
+    showAlert(editingId.value ? 'Proxy atualizado com sucesso!' : 'Proxy criado com sucesso!', 'success')
     closeModal()
-    await loadRedes()
+    await loadProxies()
     
   } catch (error) {
-    showAlert(error.message || 'Erro ao salvar rede', 'error')
+    showAlert(error.message || 'Erro ao salvar proxy', 'error')
   } finally {
     saving.value = false
   }
 }
 
-const confirmDelete = (rede) => {
-  itemToDelete.value = rede
+const confirmDelete = (proxy) => {
+  itemToDelete.value = proxy
   isDeleteModalOpen.value = true
 }
 
@@ -212,12 +249,12 @@ const closeDeleteModal = () => {
 const executeDelete = async () => {
   if (!itemToDelete.value) return
   try {
-    const res = await apiFetch(`/api/redes/${itemToDelete.value.id}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/proxies/${itemToDelete.value.id}`, { method: 'DELETE' })
     if (res && res.error) throw new Error(res.message)
     
-    showAlert('Rede excluída com sucesso.', 'success')
+    showAlert('Proxy excluído com sucesso.', 'success')
     closeDeleteModal()
-    await loadRedes()
+    await loadProxies()
   } catch (error) {
     showAlert(error.message || 'Erro ao excluir.', 'error')
     closeDeleteModal()
@@ -225,12 +262,12 @@ const executeDelete = async () => {
 }
 
 onMounted(() => {
-  loadRedes()
+  loadProxies()
 })
 </script>
 
 <style scoped>
-.redes-container {
+.proxies-container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -254,6 +291,12 @@ onMounted(() => {
   background: white;
   padding: 1.5rem;
   border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
+}
+
+.form-modal.glass-card {
+  background: white;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
   border: 1px solid #f1f5f9;
 }
@@ -311,12 +354,6 @@ onMounted(() => {
   font-style: italic;
 }
 
-.explorer-link {
-  color: #0ea5e9;
-  text-decoration: none;
-  font-weight: 500;
-}
-.explorer-link:hover { text-decoration: underline; }
 .text-muted { color: #94a3b8; }
 
 /* Ações / Botões */
@@ -431,6 +468,14 @@ onMounted(() => {
   gap: 1.2rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.half-width {
+  flex: 1;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -443,7 +488,7 @@ onMounted(() => {
   color: #475569;
 }
 
-.form-group input {
+.form-group input, .form-group select {
   padding: 0.75rem 1rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -452,7 +497,7 @@ onMounted(() => {
   transition: all 0.2s;
   background: #f8fafc;
 }
-.form-group input:focus {
+.form-group input:focus, .form-group select:focus {
   outline: none;
   border-color: #3b82f6;
   background: #fff;
@@ -554,6 +599,8 @@ onMounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mobile Card Layout for Table */
 @media (max-width: 640px) {
   .header-actions {
     flex-direction: column;
@@ -582,11 +629,8 @@ onMounted(() => {
     border: 1px solid #f1f5f9;
   }
 
-  .table-responsive {
-    overflow-x: visible;
-  }
+  .table-responsive { overflow-x: visible; }
 
-  /* Responsive Table Cards */
   .modern-table, 
   .modern-table tbody, 
   .modern-table tr, 
@@ -595,9 +639,7 @@ onMounted(() => {
     width: 100%;
   }
 
-  .modern-table thead {
-    display: none;
-  }
+  .modern-table thead { display: none; }
 
   .modern-table tr {
     margin-bottom: 1rem;
@@ -643,6 +685,11 @@ onMounted(() => {
   .actions-col {
     width: 100%;
     justify-content: flex-end !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 1.2rem;
   }
 }
 

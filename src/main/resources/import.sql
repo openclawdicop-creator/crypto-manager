@@ -4,10 +4,10 @@ INSERT INTO usuario (id, username, password, email, ativo) VALUES
 (1, 'admin', '$2a$10$MpgOWXjDvQ5aoyPWDa5Ls.4mQUDlUs7y1Nba1Tf1wC9E8PiWU2YTW', 'admin@cryptomanager.com', true);
 
 -- Insert sample exchanges
-INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, token_api, url_api, log_habilitado) VALUES
-(1, 'Binance', 'Maior exchange de criptomoedas do mundo', 'CENTRALIZADA', 'REST', 'binance_api_token_123', 'https://api.binance.com', true),
-(2, 'Coinbase', 'Exchange americana de criptomoedas', 'CENTRALIZADA', 'REST', 'coinbase_api_token_456', 'https://api.coinbase.com', true),
-(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'uniswap_api_token_789', 'https://api.uniswap.org', false);
+INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, token_api, url_api, log_habilitado, usar_proxy) VALUES
+(1, 'Binance', 'Maior exchange de criptomoedas do mundo', 'CENTRALIZADA', 'REST', 'binance_api_token_123', 'https://api.binance.com', true, false),
+(2, 'Coinbase', 'Exchange americana de criptomoedas', 'CENTRALIZADA', 'REST', 'coinbase_api_token_456', 'https://api.coinbase.com', true, false),
+(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'uniswap_api_token_789', 'https://api.uniswap.org', false, false);
 
 -- Insert sample networks
 INSERT INTO rede (id, nome, url_explorer) VALUES
@@ -43,9 +43,22 @@ INSERT INTO historico_cotacao (id, parametrizacao_id, data_hora_consulta, cotaca
 (4, 3, CURRENT_TIMESTAMP(), 42480.00, 42440.55),
 (5, 4, CURRENT_TIMESTAMP(), 2275.80, 2270.35);
 
+-- Insert sample proxies
+INSERT INTO proxy (id, nome, url, usuario, senha, token, porta) VALUES
+(1, 'Proxy Europa 1', 'http://185.123.45.67:8080', 'user_proxy', 'pass123', 'tok_eur_001', 8080),
+(2, 'Proxy EUA 2', 'http://64.233.191.255:3128', NULL, NULL, NULL, 3128),
+(3, 'Proxy Brasil 3', 'https://200.155.10.2:443', 'admin_br', 'secret_br', 'tok_br_55', 443);
+
 ALTER TABLE usuario ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE exchange ALTER COLUMN id RESTART WITH 4;
 ALTER TABLE rede ALTER COLUMN id RESTART WITH 5;
 ALTER TABLE ativo_financeiro ALTER COLUMN id RESTART WITH 9;
 ALTER TABLE parametrizacao_consulta_preco ALTER COLUMN id RESTART WITH 6;
 ALTER TABLE historico_cotacao ALTER COLUMN id RESTART WITH 6;
+ALTER TABLE proxy ALTER COLUMN id RESTART WITH 4;
+
+-- Insert default scheduling routine
+INSERT INTO agendamento (id, nome, frequencia_segundos, ativo) VALUES
+(1, 'Rotina Global de Consulta', 60, true);
+
+ALTER TABLE agendamento ALTER COLUMN id RESTART WITH 2;

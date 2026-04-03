@@ -2,14 +2,30 @@
   <div class="param-container">
     <div class="header-actions">
       <h2>Gerenciamento de Parametrizacoes</h2>
-      <button @click="openModal()" class="primary-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Nova Parametrizacao
-      </button>
+      <div class="header-buttons">
+        <button @click="ativarTodas()" class="secondary-btn success-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/><polyline points="20 12 9 23 4 18"/></svg>
+          Ativar Todas
+        </button>
+        <button @click="desativarTodas()" class="secondary-btn danger-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Desativar Todas
+        </button>
+        <button @click="openModal()" class="primary-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Nova Parametrizacao
+        </button>
+      </div>
     </div>
 
-    <div v-if="alertMessage" :class="['alert', alertType]">
-      {{ alertMessage }}
+    <div v-if="alertMessage" :class="['alert', alertType, 'floating-alert']">
+      <div class="alert-content">
+        <svg v-if="alertType === 'success'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg v-else-if="alertType === 'error'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>{{ alertMessage }}</span>
+      </div>
+      <button @click="alertMessage = ''" class="alert-close">&times;</button>
     </div>
 
     <div v-if="consultaResultado" class="glass-card result-card">
@@ -233,6 +249,28 @@ const showAlert = (message, type = 'info') => {
   setTimeout(() => (alertMessage.value = ''), 5000)
 }
 
+const ativarTodas = async () => {
+  try {
+    const res = await apiFetch('/api/parametrizacoes/ativar-todas', { method: 'POST' })
+    if (res && res.error) throw new Error(res.message)
+    showAlert('Todas as parametrizacoes foram ativadas!', 'success')
+    await loadParametrizacoes()
+  } catch (error) {
+    showAlert(error.message || 'Erro ao ativar todas as parametrizacoes', 'error')
+  }
+}
+
+const desativarTodas = async () => {
+  try {
+    const res = await apiFetch('/api/parametrizacoes/desativar-todas', { method: 'POST' })
+    if (res && res.error) throw new Error(res.message)
+    showAlert('Todas as parametrizacoes foram desativadas!', 'success')
+    await loadParametrizacoes()
+  } catch (error) {
+    showAlert(error.message || 'Erro ao desativar todas as parametrizacoes', 'error')
+  }
+}
+
 const formatCotacao = (value) => {
   if (value == null) return '-'
   return new Intl.NumberFormat('pt-BR', {
@@ -397,6 +435,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .header-actions h2 {
@@ -404,6 +443,46 @@ onMounted(() => {
   color: #1e293b;
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.secondary-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.success-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.success-btn:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+}
+
+.danger-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.danger-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 .glass-card {
@@ -724,9 +803,66 @@ onMounted(() => {
 }
 
 .alert { padding: 1rem; border-radius: 8px; font-weight: 500; }
-.alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-.alert.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+.alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); }
+.alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); }
+.alert.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2); }
+
+.floating-alert {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 2000;
+  min-width: 300px;
+  max-width: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: currentColor;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 640px) {
+  .floating-alert {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+    max-width: none;
+    animation: slideDown 0.3s ease-out;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .loading-state {
   display: flex;
@@ -751,9 +887,12 @@ onMounted(() => {
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 640px) {
-  .header-actions { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .header-actions h2 { font-size: 1.25rem; }
+  .header-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; width: 100%; }
+  .header-actions h2 { font-size: 1.25rem; width: 100%; }
+  .header-buttons { width: 100%; flex-direction: column; gap: 0.75rem; }
+  .header-buttons > * { width: 100%; }
   .primary-btn { width: 100%; justify-content: center; }
+  .secondary-btn, .header-actions button { width: 100%; justify-content: center; }
 
   .glass-card { padding: 1rem; background: transparent; box-shadow: none; border: none; }
   .form-modal.glass-card {
@@ -814,5 +953,20 @@ onMounted(() => {
   .result-header { flex-direction: column; }
   .result-time { white-space: normal; }
   .result-grid { grid-template-columns: 1fr; }
+}
+
+.header-buttons {
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.header-buttons > * {
+  width: 100%;
+}
+
+.header-buttons :deep(.p-button),
+.header-buttons button {
+  width: 100%;
 }
 </style>

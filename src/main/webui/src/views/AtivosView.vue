@@ -9,8 +9,14 @@
     </div>
 
     <!-- Alert / Error -->
-    <div v-if="alertMessage" :class="['alert', alertType]">
-      {{ alertMessage }}
+    <div v-if="alertMessage" :class="['alert', alertType, 'floating-alert']">
+      <div class="alert-content">
+        <svg v-if="alertType === 'success'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg v-else-if="alertType === 'error'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>{{ alertMessage }}</span>
+      </div>
+      <button @click="alertMessage = ''" class="alert-close">&times;</button>
     </div>
 
     <div class="glass-card">
@@ -460,9 +466,66 @@ onMounted(() => {
   border-radius: 8px;
   font-weight: 500;
 }
-.alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-.alert.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+.alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); }
+.alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); }
+.alert.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2); }
+
+.floating-alert {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 2000;
+  min-width: 300px;
+  max-width: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: currentColor;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 640px) {
+  .floating-alert {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+    max-width: none;
+    animation: slideDown 0.3s ease-out;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .loading-state {
   display: flex;
@@ -490,13 +553,14 @@ onMounted(() => {
 @media (max-width: 640px) {
   .header-actions {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
   }
 
-  .header-actions h2 { font-size: 1.25rem; }
+  .header-actions h2 { font-size: 1.25rem; width: 100%; }
   
-  .primary-btn {
+  .header-actions button, .primary-btn, .secondary-btn {
     width: 100%;
     justify-content: center;
   }
@@ -571,5 +635,25 @@ onMounted(() => {
     width: 100%;
     justify-content: flex-end !important;
   }
+}
+
+.header-actions,
+.header-buttons {
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: initial;
+  align-items: stretch;
+}
+
+.header-actions > *,
+.header-buttons > * {
+  width: 100%;
+}
+
+.header-actions :deep(.p-button),
+.header-actions button,
+.header-buttons :deep(.p-button),
+.header-buttons button {
+  width: 100%;
 }
 </style>

@@ -5,44 +5,60 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.entity.ParametrizacaoConsultaPreco;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.acme.entity.Proxy;
+import org.acme.repository.ProxyRepository;
+import org.apache.http.HttpHost;
+import org.apache.http.client.fluent.Executor;
+import org.apache.http.client.fluent.Request;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.util.Locale;
+import java.net.URI;
+import java.util.*;
 
 @ApplicationScoped
 public class BinanceClient {
 
     private static final int DEPTH_LIMIT = 10;
-    private static final String DEPTH_URL = "https://api.binance.com/api/v3/depth";
+    private static final String BASE_URL = "https://api.binance.com";
     private static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
 
     @Inject
-    @RestClient
-    BinanceApi binanceApi;
+    ObjectMapper objectMapper;
 
     @Inject
-    ObjectMapper objectMapper;
+    ProxyRepository proxyRepository;
 
     public ResultadoCotacao consultarPreco(ParametrizacaoConsultaPreco parametrizacao) {
         validarParametrizacao(parametrizacao);
 
         String symbol = parametrizacao.identificadorNegociacao.trim().toUpperCase(Locale.ROOT);
-        if (parametrizacao.logHabilitado) {
-            System.out.println("URL Invocada: " + DEPTH_URL + "?symbol=" + symbol + "&limit=10");
+        boolean usarProxy = parametrizacao.exchange != null && Boolean.TRUE.equals(parametrizacao.exchange.usarProxy);
+        boolean logHabilitado = parametrizacao.logHabilitado || (parametrizacao.exchange != null && parametrizacao.exchange.logHabilitado);
+
+        if (logHabilitado) {
+            System.out.println("Iniciando consulta Binance para symbol: " + symbol + (usarProxy ? " (com Proxy)" : " (direto)"));
         }
 
-        String responseBody;
-        try {
-            responseBody = binanceApi.consultarProfundidade(symbol, DEPTH_LIMIT);
-        } catch (Exception e) {
-            throw new IllegalStateException("Falha ao consultar a Binance: " + e.getMessage(), e);
+        String urlCompletaBinance = BASE_URL + "/api/v3/depth?symbol=" + symbol + "&limit=" + DEPTH_LIMIT;
+        String responseBody = null;
+
+        if (usarProxy) {
+            try {
+                responseBody = executarComProxyRotation(urlCompletaBinance, logHabilitado);
+            } catch (IllegalStateException e) {
+                if (logHabilitado) {
+                    System.err.println("Todos os proxies falharam. Tentando consulta direta como fallback: " + e.getMessage());
+                }
+                responseBody = executarConsultaDireta(urlCompletaBinance, logHabilitado);
+            }
+        } else {
+            responseBody = executarConsultaDireta(urlCompletaBinance, logHabilitado);
         }
 
-        if (parametrizacao.logHabilitado) {
-            System.out.println("Retorno API: " + responseBody);
+        if (logHabilitado) {
+            System.out.println("Retorno API: " + (responseBody != null && responseBody.length() > 100 ? responseBody.substring(0, 100) + "..." : responseBody));
         }
 
         try {
@@ -56,6 +72,87 @@ public class BinanceClient {
         } catch (IOException e) {
             throw new IllegalStateException("Falha ao processar o retorno da Binance.", e);
         }
+    }
+
+    private String executarConsultaDireta(String urlCompletaBinance, boolean logHabilitado) {
+        try {
+            if (logHabilitado) {
+                System.out.println("Executando consulta direta: " + urlCompletaBinance);
+            }
+            return Request.Get(urlCompletaBinance)
+                    .connectTimeout(5000)
+                    .socketTimeout(5000)
+                    .execute().returnContent().asString();
+        } catch (Exception e) {
+            throw new IllegalStateException("Falha ao consultar a Binance (direto): " + e.getMessage(), e);
+        }
+    }
+
+    private String executarComProxyRotation(String urlCompletaBinance, boolean logHabilitado) {
+        List<Proxy> proxies = proxyRepository.listAll();
+        if (proxies == null || proxies.isEmpty()) {
+            throw new IllegalStateException("Uso de proxy habilitado, mas nenhum proxy cadastrado no banco de dados.");
+        }
+
+        List<Proxy> listaParaTentativa = new ArrayList<>(proxies);
+        Collections.shuffle(listaParaTentativa);
+
+        List<String> erros = new ArrayList<>();
+        for (Proxy proxy : listaParaTentativa) {
+            int porta = (proxy.porta != null) ? proxy.porta : 80;
+            String proxyHostStr = limparHost(proxy.url);
+            HttpHost proxyHost = new HttpHost(proxyHostStr, porta);
+
+            if (logHabilitado) {
+                System.out.println("Tentando proxy: " + (proxy.nome != null ? proxy.nome : proxy.url) + " (" + proxyHostStr + ":" + porta + ")");
+            }
+
+            try {
+                Executor executor = Executor.newInstance();
+                boolean temAuth = proxy.usuario != null && !proxy.usuario.isBlank();
+                
+                if (temAuth) {
+                    if (logHabilitado) {
+                        System.out.println("Configurando autenticação para o proxy: " + proxy.usuario);
+                    }
+                    executor.auth(proxyHost, proxy.usuario, proxy.senha);
+                }
+
+                return executor.execute(Request.Get(urlCompletaBinance)
+                        .viaProxy(proxyHost)
+                        .connectTimeout(5000)
+                        .socketTimeout(5000))
+                        .returnContent().asString();
+
+            } catch (Exception e) {
+                String erroMsg = "Falha no proxy " + (proxy.nome != null ? proxy.nome : proxy.url) + ": " + e.getMessage();
+                erros.add(erroMsg);
+                
+                if (logHabilitado) {
+                    System.err.println(erroMsg);
+                }
+
+                // Tratamento de erros específicos para continuar rotação (407, 451, 402, Erros de Rede)
+                String msg = e.getMessage() != null ? e.getMessage() : "";
+                if (msg.contains("407") || msg.contains("451") || msg.contains("402") || 
+                    e instanceof IOException) {
+                    if (logHabilitado) {
+                        System.out.println("Erro recuperável detectado. Continuando rotação...");
+                    }
+                    continue;
+                }
+            }
+        }
+
+        throw new IllegalStateException("API Binance inacessível após esgotar todos os proxies disponíveis (" + listaParaTentativa.size() + "). Erros: " + String.join(" | ", erros));
+    }
+
+    private String limparHost(String url) {
+        if (url == null) return null;
+        String host = url.replaceFirst("^[a-zA-Z]+://", "");
+        host = host.split("/")[0];
+        host = host.split(":")[0];
+        return host;
     }
 
     private void validarParametrizacao(ParametrizacaoConsultaPreco parametrizacao) {

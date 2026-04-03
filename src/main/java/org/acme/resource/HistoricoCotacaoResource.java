@@ -42,10 +42,12 @@ public class HistoricoCotacaoResource {
 
     @GET
     @Path("/parametrizacao/{parametrizacaoId}")
-    public ApiResponse<List<HistoricoCotacao>> listarPorParametrizacao(@PathParam("parametrizacaoId") Long parametrizacaoId) {
+    public ApiResponse<List<HistoricoCotacao>> listarPorParametrizacao(
+            @PathParam("parametrizacaoId") Long parametrizacaoId,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size) {
         try {
-            List<HistoricoCotacao> historicos = historicoCotacaoService.listarPorParametrizacaoId(parametrizacaoId);
-            return ApiResponse.success(historicos);
+            return historicoCotacaoService.listarPorParametrizacaoIdPaginado(parametrizacaoId, page, size);
         } catch (Exception e) {
             return ApiResponse.error("Erro ao listar históricos de cotação: " + e.getMessage());
         }

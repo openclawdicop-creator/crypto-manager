@@ -114,4 +114,26 @@ public class ParametrizacaoConsultaPrecoResource {
             return ApiResponse.error("Erro ao excluir parametrizacao: " + e.getMessage());
         }
     }
+
+    @POST
+    @Path("/ativar-todas")
+    public ApiResponse<List<ParametrizacaoConsultaPreco>> ativarTodas() {
+        try {
+            List<ParametrizacaoConsultaPreco> atualizadas = parametrizacaoService.ativarTodas();
+            return ApiResponse.success("Todas as parametrizacoes foram ativadas", atualizadas);
+        } catch (Exception e) {
+            return ApiResponse.error("Erro ao ativar todas as parametrizacoes: " + e.getMessage());
+        }
+    }
+
+    @POST
+    @Path("/desativar-todas")
+    public ApiResponse<List<ParametrizacaoConsultaPreco>> desativarTodas() {
+        try {
+            List<ParametrizacaoConsultaPreco> atualizadas = parametrizacaoService.desativarTodas();
+            return ApiResponse.success("Todas as parametrizacoes foram desativadas", atualizadas);
+        } catch (Exception e) {
+            return ApiResponse.error("Erro ao desativar todas as parametrizacoes: " + e.getMessage());
+        }
+    }
 }

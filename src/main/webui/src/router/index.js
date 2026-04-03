@@ -36,6 +36,11 @@ const router = createRouter({
           component: () => import('../views/ExchangesView.vue')
         },
         {
+          path: 'proxies',
+          name: 'proxies',
+          component: () => import('../views/ProxiesView.vue')
+        },
+        {
           path: 'redes',
           name: 'redes',
           component: () => import('../views/RedesView.vue')
@@ -44,6 +49,11 @@ const router = createRouter({
           path: 'parametrizacoes',
           name: 'parametrizacoes',
           component: () => import('../views/ParametrizacoesView.vue')
+        },
+        {
+          path: 'agendamentos',
+          name: 'agendamentos',
+          component: () => import('../views/AgendamentosView.vue')
         },
         {
           path: 'historicos',

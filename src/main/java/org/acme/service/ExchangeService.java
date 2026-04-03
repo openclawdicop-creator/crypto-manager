@@ -41,6 +41,7 @@ public class ExchangeService {
         exchange.tipoApi = exchangeAtualizado.tipoApi;
         exchange.tokenApi = exchangeAtualizado.tokenApi;
         exchange.urlApi = exchangeAtualizado.urlApi;
+        exchange.usarProxy = exchangeAtualizado.usarProxy;
         exchange.logHabilitado = exchangeAtualizado.logHabilitado;
         exchangeRepository.persist(exchange);
         return exchange;
