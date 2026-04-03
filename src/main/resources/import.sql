@@ -7,7 +7,8 @@ INSERT INTO usuario (id, username, password, email, ativo) VALUES
 INSERT INTO exchange (id, nome, descricao, tipo, tipo_api, categoria, token_api, url_api, profundidade_livro_ofertas, log_habilitado, usar_proxy) VALUES
 (1, 'Binance', 'Maior exchange de criptomoedas do mundo', 'CENTRALIZADA', 'REST', 'SPOT', 'binance_api_token_123', 'https://api.binance.com', 10, true, false),
 (2, 'Coinbase', 'Exchange americana de criptomoedas', 'CENTRALIZADA', 'REST', 'SPOT', 'coinbase_api_token_456', 'https://api.coinbase.com', 10, true, false),
-(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'SPOT', 'uniswap_api_token_789', 'https://api.uniswap.org', 10, false, false);
+(3, 'Uniswap', 'Exchange descentralizada na rede Ethereum', 'DESCENTRALIZADA', 'WEBSOCKET', 'SPOT', 'uniswap_api_token_789', 'https://api.uniswap.org', 10, false, false),
+(4, 'MEXC', 'Exchange centralizada com API Spot v3 compativel para order book', 'CENTRALIZADA', 'REST', 'SPOT', 'mexc_api_token_321', 'https://api.mexc.com', 10, true, false);
 
 -- Insert sample networks
 INSERT INTO rede (id, nome, url_explorer) VALUES
@@ -50,7 +51,7 @@ INSERT INTO proxy (id, nome, url, usuario, senha, token, porta) VALUES
 (3, 'Proxy Brasil 3', 'https://200.155.10.2:443', 'admin_br', 'secret_br', 'tok_br_55', 443);
 
 ALTER TABLE usuario ALTER COLUMN id RESTART WITH 2;
-ALTER TABLE exchange ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE exchange ALTER COLUMN id RESTART WITH 5;
 ALTER TABLE rede ALTER COLUMN id RESTART WITH 5;
 ALTER TABLE ativo_financeiro ALTER COLUMN id RESTART WITH 9;
 ALTER TABLE parametrizacao_consulta_preco ALTER COLUMN id RESTART WITH 6;

@@ -9,6 +9,7 @@ import org.acme.repository.HistoricoCotacaoRepository;
 import org.acme.repository.ParametrizacaoConsultaPrecoRepository;
 import org.acme.ws.BinanceClient;
 import org.acme.ws.BybitClient;
+import org.acme.ws.MexcClient;
 import org.acme.ws.ResultadoCotacao;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ public class CotacaoService {
 
     @Inject
     BybitClient bybitClient;
+
+    @Inject
+    MexcClient mexcClient;
 
     @Transactional
     public HistoricoCotacao processarConsulta(ParametrizacaoConsultaPreco parametrizacaoRecebida) {
@@ -64,6 +68,10 @@ public class CotacaoService {
 
         if ("binance".equalsIgnoreCase(nomeExchange)) {
             return binanceClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if ("mexc".equalsIgnoreCase(nomeExchange)) {
+            return mexcClient.consultarPreco(parametrizacaoPersistida);
         }
 
         throw new IllegalArgumentException("Exchange nao suportada para consulta de cotacao: " + nomeExchange);
