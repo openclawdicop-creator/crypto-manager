@@ -19,6 +19,7 @@
         <router-link to="/parametrizacoes" class="nav-item" active-class="active" @click="closeSidebar">Parametrizações</router-link>
         <router-link to="/agendamentos" class="nav-item" active-class="active" @click="closeSidebar">Agendamentos</router-link>
         <router-link to="/historicos" class="nav-item" active-class="active" @click="closeSidebar">Histórico</router-link>
+        <router-link to="/sql-manager" class="nav-item" active-class="active" @click="closeSidebar">SQL Manager</router-link>
       </nav>
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn">Sair da Conta</button>
@@ -78,6 +79,8 @@ const closeSidebar = () => {
 
 // Compute the title dynamically based on path to put on the header
 const routeTitle = computed(() => {
+  if (route.meta?.title) return route.meta.title
+
   const path = route.path.replace('/', '')
   if (!path || path === 'dashboard') return 'Dashboard Geral'
   // Capitalizes first letter of path

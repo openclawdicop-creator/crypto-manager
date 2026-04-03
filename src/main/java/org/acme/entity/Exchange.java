@@ -31,6 +31,9 @@ public class Exchange extends PanacheEntityBase {
     @Column(name = "url_api", length = 200)
     public String urlApi;
 
+    @Column(name = "profundidade_livro_ofertas", nullable = false)
+    public Integer profundidadeLivroOfertas = 10;
+
     @Column(name = "log_habilitado")
     public boolean logHabilitado;
 

@@ -12,6 +12,8 @@ import java.util.Optional;
 @ApplicationScoped
 public class ExchangeService {
 
+    private static final int PROFUNDIDADE_PADRAO_LIVRO_OFERTAS = 10;
+
     @Inject
     ExchangeRepository exchangeRepository;
 
@@ -25,6 +27,7 @@ public class ExchangeService {
 
     @Transactional
     public Exchange criar(Exchange exchange) {
+        exchange.profundidadeLivroOfertas = normalizarProfundidadeLivroOfertas(exchange.profundidadeLivroOfertas);
         exchangeRepository.persist(exchange);
         return exchange;
     }
@@ -41,6 +44,7 @@ public class ExchangeService {
         exchange.tipoApi = exchangeAtualizado.tipoApi;
         exchange.tokenApi = exchangeAtualizado.tokenApi;
         exchange.urlApi = exchangeAtualizado.urlApi;
+        exchange.profundidadeLivroOfertas = normalizarProfundidadeLivroOfertas(exchangeAtualizado.profundidadeLivroOfertas);
         exchange.usarProxy = exchangeAtualizado.usarProxy;
         exchange.logHabilitado = exchangeAtualizado.logHabilitado;
         exchangeRepository.persist(exchange);
@@ -50,5 +54,17 @@ public class ExchangeService {
     @Transactional
     public void excluir(Long id) {
         exchangeRepository.deleteById(id);
+    }
+
+    private Integer normalizarProfundidadeLivroOfertas(Integer profundidadeLivroOfertas) {
+        if (profundidadeLivroOfertas == null) {
+            return PROFUNDIDADE_PADRAO_LIVRO_OFERTAS;
+        }
+
+        if (profundidadeLivroOfertas <= 0) {
+            throw new IllegalArgumentException("Profundidade do livro de ofertas deve ser maior que zero.");
+        }
+
+        return profundidadeLivroOfertas;
     }
 }

@@ -59,6 +59,12 @@ const router = createRouter({
           path: 'historicos',
           name: 'historicos',
           component: () => import('../views/HistoricosView.vue')
+        },
+        {
+          path: 'sql-manager',
+          name: 'sql-manager',
+          component: () => import('../views/SQLManagerView.vue'),
+          meta: { title: 'SQL Manager' }
         }
       ]
     }

@@ -22,9 +22,8 @@ import java.util.Locale;
 @ApplicationScoped
 public class BybitClient {
 
-    private static final int DEPTH_LIMIT = 200;
+    private static final int DEFAULT_DEPTH_LIMIT = 10;
     private static final String CATEGORY = "spot";
-    private static final String BASE_URL = "https://api.bybit.com";
     private static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
 
     @Inject
@@ -37,14 +36,15 @@ public class BybitClient {
         validarParametrizacao(parametrizacao);
 
         String symbol = parametrizacao.identificadorNegociacao.trim().toUpperCase(Locale.ROOT);
+        int depthLimit = obterProfundidadeLivroOfertas(parametrizacao);
         boolean usarProxy = parametrizacao.exchange != null && Boolean.TRUE.equals(parametrizacao.exchange.usarProxy);
         boolean logHabilitado = parametrizacao.logHabilitado || (parametrizacao.exchange != null && parametrizacao.exchange.logHabilitado);
 
         if (logHabilitado) {
-            System.out.println("Iniciando consulta Bybit para symbol: " + symbol + " [category=" + CATEGORY + "]" + (usarProxy ? " (com Proxy)" : " (direto)"));
+            System.out.println("Iniciando consulta Bybit para symbol: " + symbol + " [category=" + CATEGORY + ", depthLimit=" + depthLimit + "]" + (usarProxy ? " (com Proxy)" : " (direto)"));
         }
 
-        String urlCompletaBybit = BASE_URL + "/v5/market/orderbook?category=" + CATEGORY + "&symbol=" + symbol + "&limit=" + DEPTH_LIMIT;
+        String urlCompletaBybit = obterBaseUrl(parametrizacao) + "/v5/market/orderbook?category=" + CATEGORY + "&symbol=" + symbol + "&limit=" + depthLimit;
         String responseBody;
 
         if (usarProxy) {
@@ -183,12 +183,32 @@ public class BybitClient {
         if (parametrizacao == null) {
             throw new IllegalArgumentException("Parametrizacao obrigatoria para consultar preco.");
         }
+        if (parametrizacao.exchange == null) {
+            throw new IllegalArgumentException("Exchange obrigatoria para consultar a Bybit.");
+        }
+        if (parametrizacao.exchange.urlApi == null || parametrizacao.exchange.urlApi.isBlank()) {
+            throw new IllegalArgumentException("URL da API da exchange obrigatoria para consultar a Bybit.");
+        }
         if (parametrizacao.identificadorNegociacao == null || parametrizacao.identificadorNegociacao.isBlank()) {
             throw new IllegalArgumentException("Identificador de negociacao obrigatorio para consultar a Bybit.");
         }
         if (parametrizacao.quantidadePagamento == null || parametrizacao.quantidadePagamento <= 0) {
             throw new IllegalArgumentException("Quantidade de pagamento deve ser maior que zero.");
         }
+    }
+
+    private String obterBaseUrl(ParametrizacaoConsultaPreco parametrizacao) {
+        return parametrizacao.exchange.urlApi.trim().replaceAll("/+$", "");
+    }
+
+    private int obterProfundidadeLivroOfertas(ParametrizacaoConsultaPreco parametrizacao) {
+        Integer profundidadeLivroOfertas = parametrizacao.exchange != null
+                ? parametrizacao.exchange.profundidadeLivroOfertas
+                : null;
+
+        return profundidadeLivroOfertas != null && profundidadeLivroOfertas > 0
+                ? profundidadeLivroOfertas
+                : DEFAULT_DEPTH_LIMIT;
     }
 
     private double calcularPrecoMedioPonderado(JsonNode ofertas, BigDecimal valorFinanceiroDesejado, String lado) {

@@ -20,8 +20,7 @@ import java.util.*;
 @ApplicationScoped
 public class BinanceClient {
 
-    private static final int DEPTH_LIMIT = 10;
-    private static final String BASE_URL = "https://api.binance.com";
+    private static final int DEFAULT_DEPTH_LIMIT = 10;
     private static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
 
     @Inject
@@ -34,14 +33,15 @@ public class BinanceClient {
         validarParametrizacao(parametrizacao);
 
         String symbol = parametrizacao.identificadorNegociacao.trim().toUpperCase(Locale.ROOT);
+        int depthLimit = obterProfundidadeLivroOfertas(parametrizacao);
         boolean usarProxy = parametrizacao.exchange != null && Boolean.TRUE.equals(parametrizacao.exchange.usarProxy);
         boolean logHabilitado = parametrizacao.logHabilitado || (parametrizacao.exchange != null && parametrizacao.exchange.logHabilitado);
 
         if (logHabilitado) {
-            System.out.println("Iniciando consulta Binance para symbol: " + symbol + (usarProxy ? " (com Proxy)" : " (direto)"));
+            System.out.println("Iniciando consulta Binance para symbol: " + symbol + " [depthLimit=" + depthLimit + "]" + (usarProxy ? " (com Proxy)" : " (direto)"));
         }
 
-        String urlCompletaBinance = BASE_URL + "/api/v3/depth?symbol=" + symbol + "&limit=" + DEPTH_LIMIT;
+        String urlCompletaBinance = obterBaseUrl(parametrizacao) + "/api/v3/depth?symbol=" + symbol + "&limit=" + depthLimit;
         String responseBody = null;
 
         if (usarProxy) {
@@ -159,12 +159,32 @@ public class BinanceClient {
         if (parametrizacao == null) {
             throw new IllegalArgumentException("Parametrizacao obrigatoria para consultar preco.");
         }
+        if (parametrizacao.exchange == null) {
+            throw new IllegalArgumentException("Exchange obrigatoria para consultar a Binance.");
+        }
+        if (parametrizacao.exchange.urlApi == null || parametrizacao.exchange.urlApi.isBlank()) {
+            throw new IllegalArgumentException("URL da API da exchange obrigatoria para consultar a Binance.");
+        }
         if (parametrizacao.identificadorNegociacao == null || parametrizacao.identificadorNegociacao.isBlank()) {
             throw new IllegalArgumentException("Identificador de negociacao obrigatorio para consultar a Binance.");
         }
         if (parametrizacao.quantidadePagamento == null || parametrizacao.quantidadePagamento <= 0) {
             throw new IllegalArgumentException("Quantidade de pagamento deve ser maior que zero.");
         }
+    }
+
+    private String obterBaseUrl(ParametrizacaoConsultaPreco parametrizacao) {
+        return parametrizacao.exchange.urlApi.trim().replaceAll("/+$", "");
+    }
+
+    private int obterProfundidadeLivroOfertas(ParametrizacaoConsultaPreco parametrizacao) {
+        Integer profundidadeLivroOfertas = parametrizacao.exchange != null
+                ? parametrizacao.exchange.profundidadeLivroOfertas
+                : null;
+
+        return profundidadeLivroOfertas != null && profundidadeLivroOfertas > 0
+                ? profundidadeLivroOfertas
+                : DEFAULT_DEPTH_LIMIT;
     }
 
     private double calcularPrecoMedioPonderado(JsonNode ofertas, BigDecimal valorFinanceiroDesejado, String lado) {

@@ -26,6 +26,8 @@ public class DatabaseIdentitySyncService {
 
     @Transactional
     void onStart(@Observes StartupEvent event) {
+        garantirColunaProfundidadeLivroOfertas();
+
         for (String table : IDENTITY_TABLES) {
             Number nextId = (Number) entityManager
                     .createNativeQuery("SELECT COALESCE(MAX(id), 0) + 1 FROM " + table)
@@ -35,5 +37,23 @@ public class DatabaseIdentitySyncService {
                     .createNativeQuery("ALTER TABLE " + table + " ALTER COLUMN id RESTART WITH " + nextId.longValue())
                     .executeUpdate();
         }
+    }
+
+    private void garantirColunaProfundidadeLivroOfertas() {
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ADD COLUMN IF NOT EXISTS profundidade_livro_ofertas INTEGER DEFAULT 10")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("UPDATE exchange SET profundidade_livro_ofertas = 10 WHERE profundidade_livro_ofertas IS NULL OR profundidade_livro_ofertas <= 0")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ALTER COLUMN profundidade_livro_ofertas SET DEFAULT 10")
+                .executeUpdate();
+
+        entityManager
+                .createNativeQuery("ALTER TABLE exchange ALTER COLUMN profundidade_livro_ofertas SET NOT NULL")
+                .executeUpdate();
     }
 }

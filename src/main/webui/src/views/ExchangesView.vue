@@ -32,19 +32,23 @@
               <th>Nome</th>
               <th>Tipo</th>
               <th>Tipo API</th>
+              <th>Profundidade</th>
               <th>Proxy</th>
               <th class="actions-col">Ações</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="exchanges.length === 0">
-              <td colspan="6" class="empty-state">Nenhuma exchange cadastrada. Clique em "Nova Exchange" para adicionar.</td>
+              <td colspan="7" class="empty-state">Nenhuma exchange cadastrada. Clique em "Nova Exchange" para adicionar.</td>
             </tr>
             <tr v-for="exchange in exchanges" :key="exchange.id">
               <td data-label="ID"><strong>#{{ exchange.id }}</strong></td>
               <td data-label="Nome">{{ exchange.nome }}</td>
               <td data-label="Tipo">{{ exchange.tipo }}</td>
               <td data-label="Tipo API"><span :class="['api-badge', exchange.tipoApi]">{{ exchange.tipoApi }}</span></td>
+              <td data-label="Profundidade">
+                <span class="depth-badge">{{ exchange.profundidadeLivroOfertas || 10 }}</span>
+              </td>
               <td data-label="Proxy">
                 <span :class="['status-badge', exchange.usarProxy ? 'active' : 'inactive']">
                   {{ exchange.usarProxy ? 'Sim' : 'Não' }}
@@ -105,6 +109,18 @@
           <div class="form-group">
             <label>URL da API</label>
             <input v-model="form.urlApi" type="url" placeholder="Ex: https://api.binance.com" maxlength="200"/>
+          </div>
+
+          <div class="form-group">
+            <label>Profundidade do livro de ofertas *</label>
+            <input
+              v-model.number="form.profundidadeLivroOfertas"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Ex: 10"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -172,6 +188,7 @@ const defaultForm = {
   tipo: 'CENTRALIZADA',
   tipoApi: 'REST',
   urlApi: '',
+  profundidadeLivroOfertas: 10,
   tokenApi: '',
   logHabilitado: false,
   usarProxy: false
@@ -213,6 +230,7 @@ const openModal = (exchange = null) => {
       tipo: exchange.tipo || 'CENTRALIZADA',
       tipoApi: exchange.tipoApi || 'REST',
       urlApi: exchange.urlApi || '',
+      profundidadeLivroOfertas: exchange.profundidadeLivroOfertas || 10,
       tokenApi: exchange.tokenApi || '',
       logHabilitado: exchange.logHabilitado || false,
       usarProxy: exchange.usarProxy || false
@@ -389,6 +407,19 @@ onMounted(() => {
 }
 .api-badge.REST { background: #dcfce7; color: #15803d; }
 .api-badge.WEBSOCKET { background: #e0e7ff; color: #4338ca; }
+
+.depth-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
 
 .status-badge {
   font-size: 0.8rem;
