@@ -161,15 +161,23 @@
             <input v-model.number="form.quantidadePagamento" type="number" step="any" min="0" placeholder="Ex: 100.0" required />
           </div>
           <div class="form-group">
-            <label>Identificador de Negociacao *</label>
+            <label>Identificador de Negociacao <span v-if="!isJupiterSelected">*</span></label>
             <input
               v-model.trim="form.identificadorNegociacao"
               type="text"
               maxlength="100"
-              placeholder="Ex: BTCUSDT"
-              required
+              :placeholder="isJupiterSelected ? 'Nao se aplica ao Jupiter' : 'Ex: BTCUSDT'"
+              :required="!isJupiterSelected"
+              :disabled="isJupiterSelected"
             />
-            <small class="field-help">Codigo usado pela exchange para consultar cotacoes do par. Exemplo na Binance: BTCUSDT.</small>
+            <small class="field-help">
+              <span v-if="isJupiterSelected">
+                No Jupiter, o par e resolvido pelos cadastros de `AtivoFinanceiroRede` na rede selecionada, usando `identificador` como mint do token e `quantidadeCasasDecimais` para conversao dos valores.
+              </span>
+              <span v-else>
+                Codigo usado pela exchange para consultar cotacoes do par. Exemplo na Binance: BTCUSDT.
+              </span>
+            </small>
           </div>
           <div class="form-row checks-row">
             <label class="checkbox-label">
@@ -211,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { apiFetch } from '../utils/api.js'
 
 const parametrizacoes = ref([])
@@ -242,6 +250,20 @@ const defaultForm = {
 const form = ref({ ...defaultForm })
 const alertMessage = ref('')
 const alertType = ref('info')
+
+const selectedExchange = computed(() =>
+  exchanges.value.find(e => String(e.id) === String(form.value.exchangeId))
+)
+
+const isJupiterSelected = computed(() =>
+  (selectedExchange.value?.nome || '').trim().toLowerCase() === 'jupiter'
+)
+
+watch(isJupiterSelected, (value) => {
+  if (value) {
+    form.value.identificadorNegociacao = ''
+  }
+})
 
 const showAlert = (message, type = 'info') => {
   alertMessage.value = message
@@ -334,6 +356,11 @@ const openModal = async (p = null) => {
     editingId.value = null
     form.value = { ...defaultForm }
   }
+
+  if (isJupiterSelected.value) {
+    form.value.identificadorNegociacao = ''
+  }
+
   isModalOpen.value = true
 }
 
@@ -345,13 +372,14 @@ const closeModal = () => {
 const saveParametrizacao = async () => {
   saving.value = true
   try {
+    const identificadorNegociacao = isJupiterSelected.value ? null : form.value.identificadorNegociacao
     const payload = {
       exchange: { id: form.value.exchangeId },
       rede: { id: form.value.redeId },
       ativoDesejado: { id: form.value.ativoDesejadoId },
       ativoPagamento: { id: form.value.ativoPagamentoId },
       quantidadePagamento: form.value.quantidadePagamento,
-      identificadorNegociacao: form.value.identificadorNegociacao,
+      identificadorNegociacao,
       ativa: form.value.ativa,
       logHabilitado: form.value.logHabilitado
     }

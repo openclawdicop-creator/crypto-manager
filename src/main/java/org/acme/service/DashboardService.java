@@ -60,7 +60,7 @@ public class DashboardService {
             for (ParametrizacaoConsultaPreco p : ativas) {
                 Map<String, Object> dadosParametrizacao = new HashMap<>();
                 dadosParametrizacao.put("id", p.id);
-                dadosParametrizacao.put("nome", p.identificadorNegociacao);
+                dadosParametrizacao.put("nome", montarNomeParametrizacao(p));
                 dadosParametrizacao.put("dados", buscarVariacaoPreco(p.id));
                 resultado.put(String.valueOf(p.id), dadosParametrizacao);
             }
@@ -71,5 +71,16 @@ public class DashboardService {
             LOG.error("Erro ao buscar dados do dashboard: " + e.getMessage(), e);
             return Collections.emptyMap();
         }
+    }
+
+    private String montarNomeParametrizacao(ParametrizacaoConsultaPreco parametrizacao) {
+        if (parametrizacao.identificadorNegociacao != null && !parametrizacao.identificadorNegociacao.isBlank()) {
+            return parametrizacao.identificadorNegociacao;
+        }
+
+        String ativoDesejado = parametrizacao.ativoDesejado != null ? parametrizacao.ativoDesejado.simbolo : "?";
+        String ativoPagamento = parametrizacao.ativoPagamento != null ? parametrizacao.ativoPagamento.simbolo : "?";
+        String rede = parametrizacao.rede != null ? parametrizacao.rede.nome : "?";
+        return ativoDesejado + "/" + ativoPagamento + " @ " + rede;
     }
 }

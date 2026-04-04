@@ -106,7 +106,18 @@ public class AgendamentoService {
 
     @Transactional
     public void processarConsultaSeguro(ParametrizacaoConsultaPreco p) {
-        LOG.info("Processando consulta para: " + p.identificadorNegociacao);
+        LOG.info("Processando consulta para: " + descreverParametrizacao(p));
         cotacaoService.processarConsulta(p);
+    }
+
+    private String descreverParametrizacao(ParametrizacaoConsultaPreco parametrizacao) {
+        if (parametrizacao.identificadorNegociacao != null && !parametrizacao.identificadorNegociacao.isBlank()) {
+            return parametrizacao.identificadorNegociacao;
+        }
+
+        String ativoDesejado = parametrizacao.ativoDesejado != null ? parametrizacao.ativoDesejado.simbolo : "?";
+        String ativoPagamento = parametrizacao.ativoPagamento != null ? parametrizacao.ativoPagamento.simbolo : "?";
+        String rede = parametrizacao.rede != null ? parametrizacao.rede.nome : "?";
+        return ativoDesejado + "/" + ativoPagamento + " @ " + rede;
     }
 }
