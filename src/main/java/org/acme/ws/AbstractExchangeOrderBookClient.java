@@ -3,6 +3,7 @@ package org.acme.ws;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
+import org.acme.entity.CategoriaExchange;
 import org.acme.entity.ParametrizacaoConsultaPreco;
 import org.acme.entity.Proxy;
 import org.acme.repository.ProxyRepository;
@@ -32,7 +33,7 @@ public abstract class AbstractExchangeOrderBookClient {
     public final ResultadoCotacao consultarPreco(ParametrizacaoConsultaPreco parametrizacao) {
         validarParametrizacao(parametrizacao);
 
-        String symbol = parametrizacao.identificadorNegociacao.trim().toUpperCase(Locale.ROOT);
+        String symbol = normalizarSimbolo(parametrizacao.identificadorNegociacao.trim());
         int depthLimit = obterProfundidadeLivroOfertas(parametrizacao);
         boolean usarProxy = parametrizacao.exchange != null && Boolean.TRUE.equals(parametrizacao.exchange.usarProxy);
         boolean logHabilitado = parametrizacao.logHabilitado
@@ -90,6 +91,17 @@ public abstract class AbstractExchangeOrderBookClient {
 
     protected String getDetalhesConsultaLog(ParametrizacaoConsultaPreco parametrizacao, int depthLimit) {
         return "[depthLimit=" + depthLimit + "]";
+    }
+
+    protected String normalizarSimbolo(String simbolo) {
+        return simbolo.toUpperCase(Locale.ROOT);
+    }
+
+    protected CategoriaExchange obterCategoriaExchange(ParametrizacaoConsultaPreco parametrizacao) {
+        if (parametrizacao == null || parametrizacao.exchange == null || parametrizacao.exchange.categoria == null) {
+            return CategoriaExchange.SPOT;
+        }
+        return parametrizacao.exchange.categoria;
     }
 
     protected String obterBaseUrl(ParametrizacaoConsultaPreco parametrizacao) {

@@ -56,13 +56,6 @@ public class BybitClient extends AbstractExchangeOrderBookClient {
                 + ", depthLimit=" + depthLimit + "]";
     }
 
-    private CategoriaExchange obterCategoriaExchange(ParametrizacaoConsultaPreco parametrizacao) {
-        if (parametrizacao == null || parametrizacao.exchange == null || parametrizacao.exchange.categoria == null) {
-            return CategoriaExchange.SPOT;
-        }
-        return parametrizacao.exchange.categoria;
-    }
-
     private String obterCategoriaBybit(ParametrizacaoConsultaPreco parametrizacao) {
         CategoriaExchange categoria = obterCategoriaExchange(parametrizacao);
         return switch (categoria) {

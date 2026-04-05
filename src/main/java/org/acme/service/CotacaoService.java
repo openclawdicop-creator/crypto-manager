@@ -9,8 +9,12 @@ import org.acme.repository.HistoricoCotacaoRepository;
 import org.acme.repository.ParametrizacaoConsultaPrecoRepository;
 import org.acme.ws.BinanceClient;
 import org.acme.ws.BybitClient;
+import org.acme.ws.BitgetClient;
+import org.acme.ws.GateClient;
 import org.acme.ws.JupiterClient;
+import org.acme.ws.LBankClient;
 import org.acme.ws.MexcClient;
+import org.acme.ws.XtClient;
 import org.acme.ws.ResultadoCotacao;
 
 import java.time.LocalDateTime;
@@ -29,6 +33,18 @@ public class CotacaoService {
 
     @Inject
     BybitClient bybitClient;
+
+    @Inject
+    GateClient gateClient;
+
+    @Inject
+    BitgetClient bitgetClient;
+
+    @Inject
+    LBankClient lbankClient;
+
+    @Inject
+    XtClient xtClient;
 
     @Inject
     MexcClient mexcClient;
@@ -66,22 +82,47 @@ public class CotacaoService {
                 ? parametrizacaoPersistida.exchange.nome.trim()
                 : "";
 
-        if ("bybit".equalsIgnoreCase(nomeExchange)) {
+        if (nomeExchangeEquals(nomeExchange, "bybit")) {
             return bybitClient.consultarPreco(parametrizacaoPersistida);
         }
 
-        if ("binance".equalsIgnoreCase(nomeExchange)) {
+        if (nomeExchangeEquals(nomeExchange, "binance")) {
             return binanceClient.consultarPreco(parametrizacaoPersistida);
         }
 
-        if ("mexc".equalsIgnoreCase(nomeExchange)) {
+        if (nomeExchangeEquals(nomeExchange, "gate", "gate.io")) {
+            return gateClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if (nomeExchangeEquals(nomeExchange, "bitget")) {
+            return bitgetClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if (nomeExchangeEquals(nomeExchange, "lbank")) {
+            return lbankClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if (nomeExchangeEquals(nomeExchange, "xt", "xt.com")) {
+            return xtClient.consultarPreco(parametrizacaoPersistida);
+        }
+
+        if (nomeExchangeEquals(nomeExchange, "mexc")) {
             return mexcClient.consultarPreco(parametrizacaoPersistida);
         }
 
-        if ("jupiter".equalsIgnoreCase(nomeExchange)) {
+        if (nomeExchangeEquals(nomeExchange, "jupiter")) {
             return jupiterClient.consultarPreco(parametrizacaoPersistida);
         }
 
         throw new IllegalArgumentException("Exchange nao suportada para consulta de cotacao: " + nomeExchange);
+    }
+
+    private boolean nomeExchangeEquals(String nomeExchange, String... aliases) {
+        for (String alias : aliases) {
+            if (alias.equalsIgnoreCase(nomeExchange)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

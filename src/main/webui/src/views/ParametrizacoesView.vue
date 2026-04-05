@@ -105,6 +105,9 @@
                   <button @click="openModal(p)" class="icon-btn edit-btn" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
+                  <button @click="cloneParametrizacao(p)" class="icon-btn clone-btn" title="Clonar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
                   <button @click="confirmDelete(p)" class="icon-btn delete-btn" title="Excluir">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
@@ -119,7 +122,7 @@
     <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3>{{ editingId ? 'Editar Parametrizacao' : 'Nova Parametrizacao' }}</h3>
+          <h3>{{ modalMode === 'edit' ? 'Editar Parametrizacao' : modalMode === 'clone' ? 'Clonar Parametrizacao' : 'Nova Parametrizacao' }}</h3>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         <div v-if="loadingOptions" class="loading-state" style="padding:1.5rem;">
@@ -192,7 +195,7 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
             <button type="submit" class="btn primary-btn" :disabled="saving">
-              {{ saving ? 'Salvando...' : 'Salvar' }}
+              {{ saving ? 'Salvando...' : modalMode === 'edit' ? 'Salvar Alteracoes' : modalMode === 'clone' ? 'Salvar como Novo' : 'Salvar' }}
             </button>
           </div>
         </form>
@@ -236,6 +239,7 @@ const isModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const itemToDelete = ref(null)
 const editingId = ref(null)
+const modalMode = ref('create')
 
 const defaultForm = {
   exchangeId: '',
@@ -250,6 +254,17 @@ const defaultForm = {
 const form = ref({ ...defaultForm })
 const alertMessage = ref('')
 const alertType = ref('info')
+
+const mapParametrizacaoToForm = (p) => ({
+  exchangeId: p.exchange?.id || '',
+  redeId: p.rede?.id || '',
+  ativoDesejadoId: p.ativoDesejado?.id || '',
+  ativoPagamentoId: p.ativoPagamento?.id || '',
+  quantidadePagamento: p.quantidadePagamento,
+  identificadorNegociacao: p.identificadorNegociacao || '',
+  ativa: p.ativa,
+  logHabilitado: p.logHabilitado
+})
 
 const selectedExchange = computed(() =>
   exchanges.value.find(e => String(e.id) === String(form.value.exchangeId))
@@ -341,18 +356,11 @@ const openModal = async (p = null) => {
   alertMessage.value = ''
   await loadOptions()
   if (p) {
+    modalMode.value = 'edit'
     editingId.value = p.id
-    form.value = {
-      exchangeId: p.exchange?.id || '',
-      redeId: p.rede?.id || '',
-      ativoDesejadoId: p.ativoDesejado?.id || '',
-      ativoPagamentoId: p.ativoPagamento?.id || '',
-      quantidadePagamento: p.quantidadePagamento,
-      identificadorNegociacao: p.identificadorNegociacao || '',
-      ativa: p.ativa,
-      logHabilitado: p.logHabilitado
-    }
+    form.value = mapParametrizacaoToForm(p)
   } else {
+    modalMode.value = 'create'
     editingId.value = null
     form.value = { ...defaultForm }
   }
@@ -364,9 +372,24 @@ const openModal = async (p = null) => {
   isModalOpen.value = true
 }
 
+const cloneParametrizacao = async (p) => {
+  alertMessage.value = ''
+  await loadOptions()
+  modalMode.value = 'clone'
+  editingId.value = null
+  form.value = mapParametrizacaoToForm(p)
+
+  if (isJupiterSelected.value) {
+    form.value.identificadorNegociacao = ''
+  }
+
+  isModalOpen.value = true
+}
+
 const closeModal = () => {
   isModalOpen.value = false
   editingId.value = null
+  modalMode.value = 'create'
 }
 
 const saveParametrizacao = async () => {
@@ -389,7 +412,13 @@ const saveParametrizacao = async () => {
     const res = await apiFetch(url, { method, body: JSON.stringify(payload) })
     if (res && res.error) throw new Error(res.message || 'Erro do servidor')
 
-    showAlert(editingId.value ? 'Parametrizacao atualizada!' : 'Parametrizacao criada!', 'success')
+    const successMessage = editingId.value
+      ? 'Parametrizacao atualizada!'
+      : modalMode.value === 'clone'
+        ? 'Parametrizacao clonada e criada com sucesso!'
+        : 'Parametrizacao criada!'
+
+    showAlert(successMessage, 'success')
     closeModal()
     await loadParametrizacoes()
   } catch (error) {
@@ -698,6 +727,8 @@ onMounted(() => {
 
 .edit-btn { color: #3b82f6; }
 .edit-btn:hover { background: #eff6ff; }
+.clone-btn { color: #8b5cf6; }
+.clone-btn:hover { background: #f5f3ff; }
 .consult-btn { color: #16a34a; }
 .consult-btn:hover { background: #f0fdf4; }
 .delete-btn { color: #ef4444; }

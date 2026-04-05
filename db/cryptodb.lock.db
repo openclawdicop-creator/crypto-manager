@@ -1,6 +1,6 @@
 #FileLock
-#Thu Apr 02 21:21:42 BRT 2026
-hostName=racknerd-e54b607
-id=19d50b796fecf4b60f09e09a8941c93fae1fd366cc0
+#Sun Apr 05 16:00:36 BRT 2026
+server=192.168.4.38\:63049
+hostName=note-dell
 method=file
-server=23.94.84.3\:44757
+id=19d5f04af71e4c2e61b017e1f9c87e54410860368d0

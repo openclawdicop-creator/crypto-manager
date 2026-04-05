@@ -52,6 +52,9 @@
                   <button @click="openModal(rede)" class="icon-btn edit-btn" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
+                  <button @click="cloneRede(rede)" class="icon-btn clone-btn" title="Clonar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
                   <button @click="confirmDelete(rede)" class="icon-btn delete-btn" title="Excluir">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
@@ -67,7 +70,7 @@
     <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content glass-card form-modal">
         <div class="modal-header">
-          <h3>{{ editingId ? 'Editar Rede' : 'Nova Rede' }}</h3>
+          <h3>{{ modalMode === 'edit' ? 'Editar Rede' : modalMode === 'clone' ? 'Clonar Rede' : 'Nova Rede' }}</h3>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         <form @submit.prevent="saveRede" class="modern-form">
@@ -83,7 +86,7 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
             <button type="submit" class="btn primary-btn" :disabled="saving">
-              {{ saving ? 'Salvando...' : 'Salvar Rede' }}
+              {{ saving ? 'Salvando...' : modalMode === 'edit' ? 'Salvar Alteracoes' : modalMode === 'clone' ? 'Salvar como Nova' : 'Salvar Rede' }}
             </button>
           </div>
         </form>
@@ -122,6 +125,7 @@ const isModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const itemToDelete = ref(null)
 const editingId = ref(null)
+const modalMode = ref('create')
 const form = ref({ nome: '', urlExplorer: '' })
 
 const alertMessage = ref('')
@@ -132,6 +136,11 @@ const showAlert = (message, type = 'info') => {
   alertType.value = type
   setTimeout(() => alertMessage.value = '', 5000)
 }
+
+const mapRedeToForm = (rede) => ({
+  nome: rede.nome,
+  urlExplorer: rede.urlExplorer || ''
+})
 
 const loadRedes = async () => {
   loading.value = true
@@ -152,18 +161,29 @@ const loadRedes = async () => {
 const openModal = (rede = null) => {
   alertMessage.value = ''
   if (rede) {
+    modalMode.value = 'edit'
     editingId.value = rede.id
-    form.value = { nome: rede.nome, urlExplorer: rede.urlExplorer || '' }
+    form.value = mapRedeToForm(rede)
   } else {
+    modalMode.value = 'create'
     editingId.value = null
     form.value = { nome: '', urlExplorer: '' }
   }
   isModalOpen.value = true
 }
 
+const cloneRede = (rede) => {
+  alertMessage.value = ''
+  modalMode.value = 'clone'
+  editingId.value = null
+  form.value = mapRedeToForm(rede)
+  isModalOpen.value = true
+}
+
 const closeModal = () => {
   isModalOpen.value = false
   editingId.value = null
+  modalMode.value = 'create'
 }
 
 const saveRede = async () => {
@@ -188,7 +208,13 @@ const saveRede = async () => {
       throw new Error(res.message || 'Erro do servidor')
     }
 
-    showAlert(editingId.value ? 'Rede atualizada com sucesso!' : 'Rede criada com sucesso!', 'success')
+    const successMessage = editingId.value
+      ? 'Rede atualizada com sucesso!'
+      : modalMode.value === 'clone'
+        ? 'Rede clonada e criada com sucesso!'
+        : 'Rede criada com sucesso!'
+
+    showAlert(successMessage, 'success')
     closeModal()
     await loadRedes()
     
@@ -346,6 +372,8 @@ onMounted(() => {
 
 .edit-btn { color: #3b82f6; }
 .edit-btn:hover { background: #eff6ff; }
+.clone-btn { color: #8b5cf6; }
+.clone-btn:hover { background: #f5f3ff; }
 .delete-btn { color: #ef4444; }
 .delete-btn:hover { background: #fef2f2; }
 
